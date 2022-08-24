@@ -1,15 +1,55 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# OS
+.DS_Store
+*.swp
+*.swo
+*.swl
+*.swm
+*.swn
+*.pyc
 
-# Test binary, built with `go test -c`
-*.test
+# private files
+private[.-]*
+private
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Build
+vendor
+build
+docs/_build
+docs/tutorial
+docs/node_modules
+docs/modules
+docs/run-node/cosmovisor.md
+dist
+tools-stamp
+buf-stamp
+artifacts
+
+# Data - ideally these don't exist
+baseapp/data/*
+client/lcd/keys/*
+mytestnet
+
+# Testing
+coverage.txt
+profile.out
+sim_log_file
+
+# Vagrant
+.vagrant/
+*.box
+*.log
+vagrant
+
+# IDE
+.idea
+*.iml
+.dir-locals.el
+.vscode
+
+# Graphviz
+dependency-graph.png
+
+# Latex
+*.aux
 *.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
+*.synctex.gz
