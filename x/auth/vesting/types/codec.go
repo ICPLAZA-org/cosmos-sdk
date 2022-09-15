@@ -13,6 +13,9 @@ import (
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.VestingAccount)(nil), nil)
+	cdc.RegisterConcrete(&MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount", nil)
+	cdc.RegisterConcrete(&MsgCreatePeriodicVestingAccount{}, "cosmos-sdk/MsgCreatePeriodicVestingAccount", nil)
+	cdc.RegisterConcrete(&MsgCreatePermanentVestingAccount{}, "cosmos-sdk/MsgCreatePermanentVestingAccount", nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
@@ -53,6 +56,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateVestingAccount{},
+		&MsgCreatePeriodicVestingAccount{},
+		&MsgCreatePermanentVestingAccount{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -19,6 +20,8 @@ var (
 	KeySendEnabled = []byte("SendEnabled")
 	// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option
 	KeyDefaultSendEnabled = []byte("DefaultSendEnabled")
+	// KeyBurntFeeDenom is store's key for BurntFeeDenom Params
+	KeyBurntFeeDenom = []byte("BurntFeeDenom")
 )
 
 // ParamKeyTable for bank module.
@@ -27,10 +30,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new parameter configuration for the bank module
-func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams) Params {
+func NewParams(defaultSendEnabled bool, sendEnabledParams SendEnabledParams, burntFeeDenom string) Params {
 	return Params{
 		SendEnabled:        sendEnabledParams,
 		DefaultSendEnabled: defaultSendEnabled,
+		BurntFeeDenom:      burntFeeDenom,
 	}
 }
 
@@ -40,12 +44,16 @@ func DefaultParams() Params {
 		SendEnabled: SendEnabledParams{},
 		// The default send enabled value allows send transfers for all coin denoms
 		DefaultSendEnabled: true,
+		BurntFeeDenom: sdk.DefaultBondDenom,
 	}
 }
 
 // Validate all bank module parameters
 func (p Params) Validate() error {
 	if err := validateSendEnabledParams(p.SendEnabled); err != nil {
+		return err
+	}
+	if err := validateBurntFeeDenom(p.BurntFeeDenom); err != nil {
 		return err
 	}
 	return validateIsBool(p.DefaultSendEnabled)
@@ -77,7 +85,7 @@ func (p Params) SetSendEnabledParam(denom string, sendEnabled bool) Params {
 		}
 	}
 	sendParams = append(sendParams, NewSendEnabled(denom, sendEnabled))
-	return NewParams(p.DefaultSendEnabled, sendParams)
+	return NewParams(p.DefaultSendEnabled, sendParams, p.BurntFeeDenom)
 }
 
 // ParamSetPairs implements params.ParamSet
@@ -85,6 +93,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeySendEnabled, &p.SendEnabled, validateSendEnabledParams),
 		paramtypes.NewParamSetPair(KeyDefaultSendEnabled, &p.DefaultSendEnabled, validateIsBool),
+		paramtypes.NewParamSetPair(KeyBurntFeeDenom, &p.BurntFeeDenom, validateBurntFeeDenom),
 	}
 }
 
@@ -138,5 +147,20 @@ func validateIsBool(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
+	return nil
+}
+
+func validateBurntFeeDenom(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	
+	if strings.TrimSpace(v) != "" {
+		if err := sdk.ValidateDenom(v); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

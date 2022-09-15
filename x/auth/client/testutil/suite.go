@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -108,7 +109,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
-	sendTokens := sdk.NewCoins(
+	var sendTokens = sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
@@ -148,7 +149,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
-	sendTokens := sdk.NewCoins(
+	var sendTokens = sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
@@ -225,7 +226,8 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 		"--amino=true", signModeAminoFlag)
 	require.NoError(err)
 
-	var txAmino authcli.BroadcastReq
+	// var txAmino authcli.BroadcastReq
+	var txAmino authrest.BroadcastReq
 	err = val1.ClientCtx.LegacyAmino.UnmarshalJSON(res.Bytes(), &txAmino)
 	require.NoError(err)
 	require.Len(txAmino.Tx.Signatures, 2)
@@ -636,6 +638,47 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 }
 
+func (s *IntegrationTestSuite) TestSignWithMultisig() {
+	val1 := s.network.Validators[0]
+
+	// Generate a account for signing.
+	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+
+	addr1 := account1.GetAddress()
+	s.Require().NoError(err)
+
+	// Create an address that is not in the keyring, will be used to simulate `--multisig`
+	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
+	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
+	s.Require().NoError(err)
+
+	// Generate a transaction for testing --multisig with an address not in the keyring.
+	multisigTx, err := bankcli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		val1.Address,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Save multi tx to file
+	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
+
+	// Sign using multisig. We're signing a tx on behalf of the multisig address,
+	// even though the tx signer is NOT the multisig address. This is fine though,
+	// as the main point of this test is to test the `--multisig` flag with an address
+	// that is not in the keyring.
+	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
+	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
+}
+
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	val1 := s.network.Validators[0]
 
@@ -811,47 +854,6 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TestSignWithMultisig() {
-	val1 := s.network.Validators[0]
-
-	// Generate a account for signing.
-	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
-	s.Require().NoError(err)
-
-	addr1 := account1.GetAddress()
-	s.Require().NoError(err)
-
-	// Create an address that is not in the keyring, will be used to simulate `--multisig`
-	multisig := "cosmos1hd6fsrvnz6qkp87s3u86ludegq97agxsdkwzyh"
-	multisigAddr, err := sdk.AccAddressFromBech32(multisig)
-	s.Require().NoError(err)
-
-	// Generate a transaction for testing --multisig with an address not in the keyring.
-	multisigTx, err := bankcli.MsgSendExec(
-		val1.ClientCtx,
-		val1.Address,
-		val1.Address,
-		sdk.NewCoins(
-			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
-		),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-	)
-	s.Require().NoError(err)
-
-	// Save multi tx to file
-	multiGeneratedTx2File := testutil.WriteToNewTempFile(s.T(), multisigTx.String())
-
-	// Sign using multisig. We're signing a tx on behalf of the multisig address,
-	// even though the tx signer is NOT the multisig address. This is fine though,
-	// as the main point of this test is to test the `--multisig` flag with an address
-	// that is not in the keyring.
-	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
-	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
-}
-
 func (s *IntegrationTestSuite) TestCLIMultisign() {
 	val1 := s.network.Validators[0]
 
@@ -996,6 +998,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 
 	_, err = TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name(), file3.Name())
 	s.Require().NoError(err)
+
 }
 
 func (s *IntegrationTestSuite) TestMultisignBatch() {
@@ -1337,8 +1340,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
-	flags := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees,
 			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

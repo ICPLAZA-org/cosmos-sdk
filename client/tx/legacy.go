@@ -2,6 +2,7 @@ package tx
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,6 +10,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+// ConvertAndEncodeStdTx encodes the stdTx as a transaction in the format specified by txConfig
+func ConvertAndEncodeStdTx(txConfig client.TxConfig, stdTx legacytx.StdTx) ([]byte, error) {
+	builder := txConfig.NewTxBuilder()
+
+	var theTx sdk.Tx
+
+	// check if we need a StdTx anyway, in that case don't copy
+	if _, ok := builder.GetTx().(legacytx.StdTx); ok {
+		theTx = stdTx
+	} else {
+		err := CopyTx(stdTx, builder, false)
+		if err != nil {
+			return nil, err
+		}
+
+		theTx = builder.GetTx()
+	}
+
+	return txConfig.TxEncoder()(theTx)
+}
 // ConvertTxToStdTx converts a transaction to the legacy StdTx format
 func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (legacytx.StdTx, error) {
 	if stdTx, ok := tx.(legacytx.StdTx); ok {

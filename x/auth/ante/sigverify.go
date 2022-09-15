@@ -229,6 +229,10 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if ctx.IsReCheckTx() {
+		return next(ctx, tx, simulate)
+	}
+
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -260,12 +264,19 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
+		// When using Amino StdSignatures, we actually don't have the Sequence in
+		// the SignatureV2 struct (it's only in the SignDoc). In this case, we
+		// cannot check sequence directly, and must do it via signature
+		// verification (in the VerifySignature call below).
 		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
-			return ctx, sdkerrors.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
+		onlyAminoSigners := OnlyLegacyAminoSigners(sig.Data)
+		if !onlyAminoSigners {
+			if sig.Sequence != acc.GetSequence() {
+				return ctx, sdkerrors.Wrapf(
+					sdkerrors.ErrWrongSequence,
+					"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+				)
+			}
 		}
 
 		// retrieve signer data
@@ -282,11 +293,12 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// no need to verify signatures on recheck tx
-		if !simulate && !ctx.IsReCheckTx() {
+		if !simulate {
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
 				var errMsg string
-				if OnlyLegacyAminoSigners(sig.Data) {
+				// if OnlyLegacyAminoSigners(sig.Data) {
+				if onlyAminoSigners {
 					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
 					// and therefore communicate sequence number as a potential cause of error.
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
@@ -419,6 +431,7 @@ func ConsumeMultisignatureVerificationGas(
 	meter sdk.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
+
 	size := sig.BitArray.Count()
 	sigIndex := 0
 

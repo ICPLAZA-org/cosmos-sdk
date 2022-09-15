@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 )
 
 const (
@@ -145,7 +146,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 		return func() {}, nil
 	}
 
-	fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return func() {}, err
 	}
@@ -267,7 +268,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			req := BroadcastReq{
+			req := rest.BroadcastReq{
 				Tx:   stdTx,
 				Mode: "block|sync|async",
 			}
@@ -288,7 +289,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return err
 		}

@@ -36,6 +36,10 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	for _, meta := range genState.DenomMetadata {
 		k.SetDenomMetaData(ctx, meta)
 	}
+
+	for _, deflation := range genState.Deflation {
+		k.setDeflation(ctx, deflation)
+	}
 }
 
 // ExportGenesis returns the bank module's genesis state.
@@ -44,11 +48,16 @@ func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	if err != nil {
 		panic(fmt.Errorf("unable to fetch total supply %v", err))
 	}
+	totalDeflation, _, err := k.GetPaginatedTotalDeflation(ctx, &query.PageRequest{Limit: query.MaxLimit})
+	if err != nil {
+		panic(fmt.Errorf("unable to fetch total deflation %v", err))
+	}
 
 	return types.NewGenesisState(
 		k.GetParams(ctx),
 		k.GetAccountsBalances(ctx),
 		totalSupply,
 		k.GetAllDenomMetaData(ctx),
+		totalDeflation,
 	)
 }

@@ -51,6 +51,16 @@ service Query {
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/icplaza/bank/v1beta1/denoms_metadata";
   }
+
+  // TotalDeflations queries the total deflations of all coins.
+  rpc TotalDeflation(QueryTotalDeflationRequest) returns (QueryTotalDeflationResponse) {
+    option (google.api.http).get = "/icplaza/bank/v1beta1/deflation";
+  }
+ 
+  // DeflationOf queries the deflation of a single coin.
+  rpc DeflationOf(QueryDeflationOfRequest) returns (QueryDeflationOfResponse) {
+    option (google.api.http).get = "/icplaza/bank/v1beta1/deflation/{denom}";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.
@@ -190,4 +200,41 @@ message QueryDenomMetadataRequest {
 message QueryDenomMetadataResponse {
   // metadata describes and provides all the client information for the requested token.
   Metadata metadata = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTotalDeflationRequest is the request type for the Query/TotalDeflation RPC
+// method.
+message QueryTotalDeflationRequest {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // pagination defines an optional pagination for the request.
+  //
+  // Since: cosmos-sdk 0.43
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryTotalDeflationResponse is the response type for the Query/TotalDeflation RPC
+// method
+message QueryTotalDeflationResponse {
+  // deflation is the deflation of the coins
+  repeated cosmos.base.v1beta1.Coin deflation = 1
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // pagination defines the pagination in the response.
+  //
+  // Since: cosmos-sdk 0.43
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryDeflationOfRequest is the request type for the Query/DeflationOf RPC method.
+message QueryDeflationOfRequest {
+  // denom is the coin denom to query balances for.
+  string denom = 1;
+}
+
+// QueryDeflationOfResponse is the response type for the Query/DeflationOf RPC method.
+message QueryDeflationOfResponse {
+  // amount is the deflation of the coin.
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
 }

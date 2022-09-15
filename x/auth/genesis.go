@@ -25,6 +25,7 @@ func InitGenesis(ctx sdk.Context, ak keeper.AccountKeeper, data types.GenesisSta
 	}
 
 	ak.GetModuleAccount(ctx, types.FeeCollectorName)
+	ak.GetModuleAccount(ctx, types.BurntFeeCollectorName)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper

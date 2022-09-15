@@ -33,6 +33,7 @@ func GetQueryCmd() *cobra.Command {
 		GetBalancesCmd(),
 		GetCmdQueryTotalSupply(),
 		GetCmdDenomsMetadata(),
+		GetCmdQueryTotalDeflation(),
 	)
 
 	return cmd
@@ -212,3 +213,62 @@ To query for the total supply of a specific coin denomination use:
 
 	return cmd
 }
+
+func GetCmdQueryTotalDeflation() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-deflation",
+		Short: "Query the total deflation of coins of the chain",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query total deflation of coins that are held by accounts in the chain.
+
+Example:
+  $ %s query %s total-deflation
+
+To query for the total deflation of a specific coin denomination use:
+  $ %s query %s total-deflation --denom=[denom]
+`,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			denom, err := cmd.Flags().GetString(FlagDenom)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			ctx := cmd.Context()
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			if denom == "" {
+				res, err := queryClient.TotalDeflation(ctx, &types.QueryTotalDeflationRequest{Pagination: pageReq})
+				if err != nil {
+					return err
+				}
+
+				return clientCtx.PrintProto(res)
+			}
+
+			res, err := queryClient.DeflationOf(ctx, &types.QueryDeflationOfRequest{Denom: denom})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(&res.Amount)
+		},
+	}
+
+	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+

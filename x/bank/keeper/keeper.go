@@ -24,6 +24,9 @@ type Keeper interface {
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
 
+	GetBurntFeeDenom(ctx sdk.Context) string
+	GetDeflation(ctx sdk.Context, denom string) sdk.Coin
+	GetPaginatedTotalDeflation(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	HasSupply(ctx sdk.Context, denom string) bool
 	GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
@@ -50,10 +53,10 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
-	ak                     types.AccountKeeper
-	cdc                    codec.BinaryCodec
-	storeKey               sdk.StoreKey
-	paramSpace             paramtypes.Subspace
+	ak         types.AccountKeeper
+	cdc        codec.BinaryCodec
+	storeKey   sdk.StoreKey
+	paramSpace paramtypes.Subspace
 	mintCoinsRestrictionFn MintingRestrictionFn
 }
 
@@ -77,11 +80,38 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 		supply = supply.Add(sdk.NewCoin(string(key), amount))
 		return nil
 	})
+
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return supply, pageRes, nil
+}
+
+// GetPaginatedTotalDeflation queries for the deflation, ignoring 0 coins, with a given pagination
+func (k BaseKeeper) GetPaginatedTotalDeflation(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
+	store := ctx.KVStore(k.storeKey)
+	deflationStore := prefix.NewStore(store, types.DeflationKey)
+	
+	deflation := sdk.NewCoins()
+	
+	pageRes, err := query.Paginate(deflationStore, pagination, func(key, value []byte) error {
+		var amount sdk.Int
+		err := amount.Unmarshal(value)
+		if err != nil {
+			return fmt.Errorf("unable to convert amount string to Int %v", err)
+		}
+	
+		// `Add` omits the 0 coins addition to the `deflation`.
+		deflation = deflation.Add(sdk.NewCoin(string(key), amount))
+		return nil
+	})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return deflation, pageRes, nil
 }
 
 // NewBaseKeeper returns a new BaseKeeper object with a given codec, dedicated
@@ -97,17 +127,18 @@ func NewBaseKeeper(
 	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
 ) BaseKeeper {
+
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
-		ak:                     ak,
-		cdc:                    cdc,
-		storeKey:               storeKey,
-		paramSpace:             paramSpace,
+		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
+		ak:             ak,
+		cdc:            cdc,
+		storeKey:       storeKey,
+		paramSpace:     paramSpace,
 		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
 	}
 }
@@ -244,6 +275,31 @@ func (k BaseKeeper) HasSupply(ctx sdk.Context, denom string) bool {
 	return supplyStore.Has([]byte(denom))
 }
 
+// GetDeflation retrieves the Deflation from store
+func (k BaseKeeper) GetDeflation(ctx sdk.Context, denom string) sdk.Coin {
+	store := ctx.KVStore(k.storeKey)
+	deflationStore := prefix.NewStore(store, types.DeflationKey)
+
+	bz := deflationStore.Get([]byte(denom))
+	if bz == nil {
+		return sdk.Coin{
+			Denom:  denom,
+			Amount: sdk.NewInt(0),
+		}
+	}
+
+	var amount sdk.Int
+	err := amount.Unmarshal(bz)
+	if err != nil {
+		panic(fmt.Errorf("unable to unmarshal deflation value %v", err))
+	}
+
+	return sdk.Coin{
+		Denom:  denom,
+		Amount: amount,
+	}
+}
+
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
 // false otherwise.
 func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool) {
@@ -307,6 +363,7 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
+
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -324,6 +381,7 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 func (k BaseKeeper) SendCoinsFromModuleToModule(
 	ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins,
 ) error {
+
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -342,6 +400,7 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 func (k BaseKeeper) SendCoinsFromAccountToModule(
 	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
+
 	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
@@ -356,6 +415,7 @@ func (k BaseKeeper) SendCoinsFromAccountToModule(
 func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 	ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
+
 	recipientAcc := k.ak.GetModuleAccount(ctx, recipientModule)
 	if recipientAcc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
@@ -374,6 +434,7 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
+
 	acc := k.ak.GetModuleAccount(ctx, senderModule)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -444,8 +505,11 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 
 	for _, amount := range amounts {
 		supply := k.GetSupply(ctx, amount.GetDenom())
+		deflation := k.GetDeflation(ctx, amount.GetDenom())
 		supply = supply.Sub(amount)
+		deflation = deflation.Add(amount)
 		k.setSupply(ctx, supply)
+		k.setDeflation(ctx, deflation)
 	}
 
 	logger := k.Logger(ctx)
@@ -474,6 +538,24 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 		supplyStore.Delete([]byte(coin.GetDenom()))
 	} else {
 		supplyStore.Set([]byte(coin.GetDenom()), intBytes)
+	}
+}
+
+// setDeflation sets the deflation for the given coin
+func (k BaseKeeper) setDeflation(ctx sdk.Context, coin sdk.Coin) {
+	intBytes, err := coin.Amount.Marshal()
+	if err != nil {
+		panic(fmt.Errorf("unable to marshal amount value %v", err))
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	deflationStore := prefix.NewStore(store, types.DeflationKey)
+
+	// Bank invariants and IBC requires to remove zero coins.
+	if coin.IsZero() {
+		deflationStore.Delete([]byte(coin.GetDenom()))
+	} else {
+		deflationStore.Set([]byte(coin.GetDenom()), intBytes)
 	}
 }
 
@@ -537,4 +619,8 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 			break
 		}
 	}
+}
+
+func (k BaseKeeper) GetBurntFeeDenom(ctx sdk.Context) string {
+	return k.GetParams(ctx).BurntFeeDenom
 }

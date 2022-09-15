@@ -58,22 +58,31 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	if !gs.Deflation.Empty() {
+		// NOTE: this errors if deflation for any given coin is zero
+		err := gs.Deflation.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata) *GenesisState {
+func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata, deflation sdk.Coins) *GenesisState {
 	return &GenesisState{
 		Params:        params,
 		Balances:      balances,
 		Supply:        supply,
 		DenomMetadata: denomMetaData,
+		Deflation:     deflation,
 	}
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams(), []Balance{}, sdk.Coins{}, []Metadata{})
+	return NewGenesisState(DefaultParams(), []Balance{}, sdk.Coins{}, []Metadata{}, sdk.Coins{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application

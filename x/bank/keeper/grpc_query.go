@@ -68,6 +68,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		balances = append(balances, result)
 		return nil
 	})
+
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -167,6 +168,7 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 		metadatas = append(metadatas, metadata)
 		return nil
 	})
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -197,4 +199,32 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 	return &types.QueryDenomMetadataResponse{
 		Metadata: metadata,
 	}, nil
+}
+
+// TotalDeflation implements the Query/TotalDeflation gRPC method
+func (k BaseKeeper) TotalDeflation(ctx context.Context, req *types.QueryTotalDeflationRequest) (*types.QueryTotalDeflationResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	totalDeflation, pageRes, err := k.GetPaginatedTotalDeflation(sdkCtx, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	
+	return &types.QueryTotalDeflationResponse{Deflation: totalDeflation, Pagination: pageRes}, nil
+}
+
+// DeflationOf implements the Query/DeflationOf gRPC method
+func (k BaseKeeper) DeflationOf(c context.Context, req *types.QueryDeflationOfRequest) (*types.QueryDeflationOfResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	deflation := k.GetDeflation(ctx, req.Denom)
+
+	return &types.QueryDeflationOfResponse{Amount: sdk.NewCoin(req.Denom, deflation.Amount)}, nil
 }

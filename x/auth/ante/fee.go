@@ -2,6 +2,7 @@ package ante
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -95,6 +96,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
+
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 			}
@@ -130,10 +132,37 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
+	burntFeeDenom := bankKeeper.GetBurntFeeDenom(ctx)
+	if strings.TrimSpace(burntFeeDenom) != "" {
+		fees, err := burnFees(bankKeeper, ctx, acc, fees, burntFeeDenom)
+		if err != nil {
+			return err
+		}
+
+		if fees.IsZero() {
+			return nil
+		}
+	}
+
 	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
 
 	return nil
+}
+
+func burnFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins, burntFeeDenom string) (sdk.Coins, error) {
+	amount := fees.AmountOf(burntFeeDenom)
+	if amount.IsPositive() {
+		feesL := sdk.NewCoins(sdk.NewCoin(burntFeeDenom, amount))
+
+		if err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.BurntFeeCollectorName, feesL); err != nil {
+			return fees, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		}
+
+		fees = fees.Sub(feesL)
+	}
+
+	return fees, nil
 }

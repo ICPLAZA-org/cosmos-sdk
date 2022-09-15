@@ -20,15 +20,16 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	// "github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // BroadcastReq defines a tx broadcasting request.
-type BroadcastReq struct {
-	Tx   legacytx.StdTx `json:"tx" yaml:"tx"`
-	Mode string         `json:"mode" yaml:"mode"`
-}
+// type BroadcastReq struct {
+//	Tx   legacytx.StdTx `json:"tx" yaml:"tx"`
+//	Mode string         `json:"mode" yaml:"mode"`
+// }
 
 // GetSignCommand returns the sign command
 func GetMultiSignCommand() *cobra.Command {
@@ -161,7 +162,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				return err
 			}
 
-			req := BroadcastReq{
+			req := rest.BroadcastReq{
 				Tx:   stdTx,
 				Mode: "block|sync|async",
 			}
@@ -181,7 +182,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return err
 		}
@@ -248,7 +249,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
 
-		infile := os.Stdin
+		var infile = os.Stdin
 		if args[0] != "-" {
 			infile, err = os.Open(args[0])
 			defer func() {
@@ -344,7 +345,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 					return err
 				}
 
-				req := BroadcastReq{
+				req := rest.BroadcastReq{
 					Tx:   stdTx,
 					Mode: "block|sync|async",
 				}

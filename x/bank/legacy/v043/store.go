@@ -61,7 +61,7 @@ func migrateBalanceKeys(store sdk.KVStore) {
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v040bank.AddressFromBalancesStore(oldStoreIter.Key())
 		denom := oldStoreIter.Key()[v040auth.AddrLen:]
-		newStoreKey := types.CreatePrefixedAccountStoreKey(addr, denom)
+		newStoreKey := append(types.CreateAccountBalancesPrefix(addr), denom...)
 
 		// Set new key on store. Values don't change.
 		store.Set(newStoreKey, oldStoreIter.Value())
