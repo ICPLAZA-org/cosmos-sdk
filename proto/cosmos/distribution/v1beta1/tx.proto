@@ -24,6 +24,10 @@ service Msg {
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
+
+  // WithdrawTeamCommission defines a method to withdraw rewards of incentive team
+  // from a single validator.
+  rpc WithdrawTeamCommission(MsgWithdrawTeamCommission) returns (MsgWithdrawTeamCommissionResponse);
 }
 
 // MsgSetWithdrawAddress sets the withdraw address for
@@ -77,3 +81,16 @@ message MsgFundCommunityPool {
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
 message MsgFundCommunityPoolResponse {}
+
+// MsgWithdrawTeamCommission represents delegation withdrawal to a team
+// from a single validator.
+message MsgWithdrawTeamCommission {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string team_address = 1 [(gogoproto.moretags) = "yaml:\"team_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+}
+
+// MsgWithdrawTeamCommissionResponse defines the Msg/WithdrawTeamReward response type.
+message MsgWithdrawTeamCommissionResponse {}

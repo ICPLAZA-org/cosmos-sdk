@@ -21,7 +21,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	totalStakingSupply := k.StakingTokenSupply(ctx)
 	bondedRatio := k.BondedRatio(ctx)
 	minter.Inflation = minter.NextInflationRate(params, bondedRatio)
-	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
+	// minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
+	minter.AnnualProvisions = getNextAnnualProvisions(ctx, k, minter, params, totalStakingSupply)
 	k.SetMinter(ctx, minter)
 
 	// mint coins, update supply
@@ -52,4 +53,14 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 			sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
 		),
 	)
+}
+
+func getNextAnnualProvisions(ctx sdk.Context, k keeper.Keeper, minter types.Minter, params types.Params, totalSupply sdk.Int) sdk.Dec {
+	totalDeflation := k.GetDeflation(ctx, params.MintDenom)
+	rc := k.BeforeNextAnnualProvisions(ctx.BlockHeight(), params.BlocksPerYear, totalSupply.Add(totalDeflation.Amount), minter.Inflation.IsZero())
+	if rc.IsNegative() {
+		rc = minter.NextAnnualProvisions(params, totalSupply)
+	}
+
+	return rc
 }

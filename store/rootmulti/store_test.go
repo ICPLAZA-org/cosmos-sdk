@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,7 +22,7 @@ import (
 
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db)
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
 }
 
@@ -46,7 +45,7 @@ func TestGetCommitKVStore(t *testing.T) {
 
 func TestStoreMount(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db)
 
 	key1 := types.NewKVStoreKey("store1")
 	key2 := types.NewKVStoreKey("store2")
@@ -315,6 +314,7 @@ func TestParsePath(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, substore, "bang")
 	require.Equal(t, subsubpath, "/baz")
+
 }
 
 func TestMultiStoreRestart(t *testing.T) {
@@ -741,7 +741,7 @@ var (
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store {
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db)
 	store.pruningOpts = pruningOpts
 
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
@@ -752,7 +752,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store
 }
 
 func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions) (*Store, *types.StoreUpgrades) {
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db)
 	store.pruningOpts = pruningOpts
 
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)

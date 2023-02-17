@@ -29,7 +29,9 @@ const (
 	runTxModeDeliver                   // Deliver a transaction
 )
 
-var _ abci.Application = (*BaseApp)(nil)
+var (
+	_ abci.Application = (*BaseApp)(nil)
+)
 
 type (
 	// Enum mode for app.runTx

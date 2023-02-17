@@ -114,7 +114,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			description := types.NewDescription(moniker, identity, website, security, details)
 			incentiveTeamAddress, _ := cmd.Flags().GetString(FlagAddressIncentiveTeam)
 
-			var newCommissionRate *sdk.Dec
+			var newRate *sdk.Dec
 
 			commissionRate, _ := cmd.Flags().GetString(FlagCommissionRate)
 			if commissionRate != "" {
@@ -123,7 +123,7 @@ func NewEditValidatorCmd() *cobra.Command {
 					return fmt.Errorf("invalid new commission rate: %v", err)
 				}
 
-				newCommissionRate = &rate
+				newRate = &rate
 			}
 
 			var newMinSelfDelegation *sdk.Int
@@ -138,7 +138,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newMinSelfDelegation = &msb
 			}
 
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), incentiveTeamAddress, description, newCommissionRate, newMinSelfDelegation)
+			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), incentiveTeamAddress, description, newRate, newMinSelfDelegation)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

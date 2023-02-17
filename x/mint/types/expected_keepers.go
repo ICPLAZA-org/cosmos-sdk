@@ -26,4 +26,16 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
+	GetDeflation(ctx sdk.Context, denom string) sdk.Coin
+}
+
+// Event Hooks
+// These can be utilized to communicate between a mint keeper and another
+// keeper which must take particular actions when minting change
+// state. The second keeper must implement this interface, which then the
+// mint keeper can call.
+
+// MintHooks event hooks for mint object (noalias)
+type MintHooks interface {
+	BeforeNextAnnualProvisions(blockHeight int64, blocksPerYear uint64, totalSupply sdk.Int, customProvision bool) sdk.Dec                      // Must be called when a mint state changes
 }

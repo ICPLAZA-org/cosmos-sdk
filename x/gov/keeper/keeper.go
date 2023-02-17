@@ -34,6 +34,9 @@ type Keeper struct {
 
 	// Proposal router
 	router types.Router
+
+	// name of the BurntFeeCollector ModuleAccount
+	burntFeeCollectorName string 
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -46,7 +49,9 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rtr types.Router,
+	burntFeeCollectorName string,
 ) Keeper {
+
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -65,6 +70,7 @@ func NewKeeper(
 		sk:         sk,
 		cdc:        cdc,
 		router:     rtr,
+		burntFeeCollectorName: burntFeeCollectorName,
 	}
 }
 

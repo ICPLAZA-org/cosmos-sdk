@@ -11,6 +11,14 @@ service Msg {
   // CreateVestingAccount defines a method that enables creating a vesting
   // account.
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
+
+  // CreatePeriodicVestingAccount defines a method that enables creating a vesting
+  // account.
+  rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
+
+  // CreatePermanentVestingAccount defines a method that enables creating a vesting
+  // account.
+  rpc CreatePermanentVestingAccount(MsgCreatePermanentVestingAccount) returns (MsgCreatePermanentVestingAccountResponse);
 }
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
@@ -29,3 +37,34 @@ message MsgCreateVestingAccount {
 
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
+
+// MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
+// account.
+message MsgCreatePeriodicVestingAccount {
+  option (gogoproto.equal) = true;
+
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  int64 end_time = 4 [(gogoproto.moretags) = "yaml:\"end_time\""];
+  int64 period  = 5 [(gogoproto.moretags) = "yaml:\"period\""];
+}
+
+// MsgCreatePeriodicVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount response type.
+message MsgCreatePeriodicVestingAccountResponse {}
+
+// MsgCreatePermanentVestingAccount defines a message that enables creating a vesting
+// account.
+message MsgCreatePermanentVestingAccount {
+  option (gogoproto.equal) = true;
+
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// MsgCreatePermanentVestingAccountResponse defines the Msg/CreatePermanentVestingAccount response type.
+message MsgCreatePermanentVestingAccountResponse {}

@@ -17,6 +17,7 @@ type Keeper struct {
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	feeCollectorName string
+	hooks            types.MintHooks
 }
 
 // NewKeeper creates a new mint Keeper instance
@@ -42,12 +43,24 @@ func NewKeeper(
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
+		hooks:            nil,
 	}
 }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// Set the validator hooks
+func (k *Keeper) SetHooks(sh types.MintHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set mint hooks twice")
+	}
+
+	k.hooks = sh
+
+	return k
 }
 
 // get the minter
@@ -107,4 +120,8 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+}
+
+func (k Keeper) GetDeflation(ctx sdk.Context, denom string) sdk.Coin {
+	return k.bankKeeper.GetDeflation(ctx, denom)
 }

@@ -17,30 +17,30 @@ service Service {
   // Simulate simulates executing a transaction for estimating gas usage.
   rpc Simulate(SimulateRequest) returns (SimulateResponse) {
     option (google.api.http) = {
-      post: "/cosmos/tx/v1beta1/simulate"
+      post: "/icplaza/tx/v1beta1/simulate"
       body: "*"
     };
   }
   // GetTx fetches a tx by hash.
   rpc GetTx(GetTxRequest) returns (GetTxResponse) {
-    option (google.api.http).get = "/cosmos/tx/v1beta1/txs/{hash}";
+    option (google.api.http).get = "/icplaza/tx/v1beta1/txs/{hash}";
   }
   // BroadcastTx broadcast transaction.
   rpc BroadcastTx(BroadcastTxRequest) returns (BroadcastTxResponse) {
     option (google.api.http) = {
-      post: "/cosmos/tx/v1beta1/txs"
+      post: "/icplaza/tx/v1beta1/txs"
       body: "*"
     };
   }
   // GetTxsEvent fetches txs by event.
   rpc GetTxsEvent(GetTxsEventRequest) returns (GetTxsEventResponse) {
-    option (google.api.http).get = "/cosmos/tx/v1beta1/txs";
+    option (google.api.http).get = "/icplaza/tx/v1beta1/txs";
   }
   // GetBlockWithTxs fetches a block with decoded txs.
   //
   // Since: cosmos-sdk 0.45.2
   rpc GetBlockWithTxs(GetBlockWithTxsRequest) returns (GetBlockWithTxsResponse) {
-    option (google.api.http).get = "/cosmos/tx/v1beta1/txs/block/{height}";
+    option (google.api.http).get = "/icplaza/tx/v1beta1/txs/block/{height}";
   }
 }
 
@@ -141,6 +141,7 @@ message GetTxResponse {
   cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
 }
 
+
 // GetBlockWithTxsRequest is the request type for the Service.GetBlockWithTxs
 // RPC method.
 //
@@ -157,9 +158,9 @@ message GetBlockWithTxsRequest {
 // Since: cosmos-sdk 0.45.2
 message GetBlockWithTxsResponse {
   // txs are the transactions in the block.
-  repeated cosmos.tx.v1beta1.Tx txs      = 1;
-  .tendermint.types.BlockID     block_id = 2;
-  .tendermint.types.Block       block    = 3;
+  repeated cosmos.tx.v1beta1.Tx  txs = 1;
+  .tendermint.types.BlockID block_id = 2;
+  .tendermint.types.Block   block    = 3;
   // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 4;
 }

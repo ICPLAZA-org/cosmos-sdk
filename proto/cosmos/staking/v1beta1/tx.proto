@@ -30,6 +30,14 @@ service Msg {
   // Undelegate defines a method for performing an undelegation from a
   // delegate and a validator.
   rpc Undelegate(MsgUndelegate) returns (MsgUndelegateResponse);
+
+  // EditValidatorRCommissionRule defines a method for performing to edit 
+  // rellocated commission rule from a validator
+  rpc EditValidatorRCommissionRule(MsgEditValidatorRCommissionRule) returns (MsgEditValidatorRCommissionRuleResponse);
+
+  // EditValidatorRecommanderRule defines a method for performing to edit recommander rule 
+  // from a validator 
+  rpc EditValidatorRecommanderRule(MsgEditValidatorRecommanderRule) returns (MsgEditValidatorRecommanderRuleResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -48,6 +56,9 @@ message MsgCreateValidator {
   string                   validator_address = 5 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
+
+  ReallocatedCommissionRule reallocated_commission_rule = 8 [(gogoproto.nullable) = false];
+  string                    incentive_team_address = 9 [(gogoproto.moretags) = "yaml:\"incentive_team_address\""];
 }
 
 // MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
@@ -73,6 +84,8 @@ message MsgEditValidator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\""
   ];
+
+  string incentive_team_address = 5 [(gogoproto.moretags) = "yaml:\"team_address\""];
 }
 
 // MsgEditValidatorResponse defines the Msg/EditValidator response type.
@@ -87,6 +100,7 @@ message MsgDelegate {
   string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
+  string                   recommander_address = 4 [(gogoproto.moretags) = "yaml:\"recommander_address\""];
 }
 
 // MsgDelegateResponse defines the Msg/Delegate response type.
@@ -124,3 +138,35 @@ message MsgUndelegate {
 message MsgUndelegateResponse {
   google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
+
+// MsgEditValidatorRCommissionRule
+message MsgEditValidatorRCommissionRule {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string      validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+
+  // validator_rate is the commission rate charged to validator, as a fraction.
+  string validator_rate = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+
+  // recommanders_rate is the commission rate charged to validator, as a fraction.
+  string recommanders_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+// MsgEditValidatorRCommissionRuleResponse defines the Msg/EditValidatorRCommissionRule response type.
+message MsgEditValidatorRCommissionRuleResponse {}
+
+// MsgEditValidatorRecommanderRule
+message MsgEditValidatorRecommanderRule {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string      validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+
+  uint32 incentive_depth = 2 [(gogoproto.moretags) = "yaml:\"incentive_depth\""];
+
+  repeated RecommanderClassRate recommander_class_rates = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgEditValidatorRecommanderRuleResponse defines the Msg/EditValidatorRecommanderRule response type.
+message MsgEditValidatorRecommanderRuleResponse {}

@@ -117,6 +117,13 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+  // reallocated_commission_rule is all the rule of reallocated commission.
+  ReallocatedCommissionRule reallocated_commission_rule = 12 [(gogoproto.nullable) = false];
+  // incentive_team_address define the address of team to receive reward.
+  string incentive_team_address = 13 [(gogoproto.moretags) = "yaml:\"incentive_team_address\""];
+
+  // delegators define the delegator number (incl. self-delegation).
+  string delegators = 14 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 // BondStatus is the status of a validator.
@@ -191,6 +198,8 @@ message Delegation {
   string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // shares define the delegation shares received.
   string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  // recommander_address is the bech32-encoded address of the recommander.
+  string recommander_address = 4 [(gogoproto.moretags) = "yaml:\"recommander_address\""];
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
@@ -282,6 +291,8 @@ message Params {
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  // max_incentive_depth is the max depth of incentive to reallocate commission.
+  uint32 max_incentive_depth = 6 [(gogoproto.moretags) = "yaml:\"max_incentive_depth\""];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -331,4 +342,33 @@ message Pool {
     (gogoproto.nullable)   = false,
     (gogoproto.moretags)   = "yaml:\"bonded_tokens\""
   ];
+}
+
+// RecommanderClassRate is the ratio of a recommander
+message RecommanderClassRate {
+  option (gogoproto.equal)            = true;
+
+  uint32 index = 1 [(gogoproto.moretags) = "yaml:\"index\""];
+  string rate = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+// ReallocatedCommissionRule is reallocated commission rule
+//
+message ReallocatedCommissionRule {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  // validator_rate is the commission rate charged to validator, as a fraction.
+  string validator_rate = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  
+  // recommanders_rate is the commission rate charged to validator, as a fraction.
+  string recommanders_rate = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  
+  uint32 incentive_depth = 3 [(gogoproto.moretags) = "yaml:\"incentive_depth\""];
+
+  repeated RecommanderClassRate recommander_class_rates = 4 [(gogoproto.nullable) = false];
+
+  // update_time is the last time the commission rate was changed.
+  google.protobuf.Timestamp update_time      = 5
+    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"update_time\""];
 }

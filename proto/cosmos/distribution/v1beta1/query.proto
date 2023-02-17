@@ -34,6 +34,12 @@ service Query {
     option (google.api.http).get = "/icplaza/distribution/v1beta1/validators/{validator_address}/slashes";
   }
 
+  // ValidatorDelayedRewards queries the total rewards accrued by a validator.
+  rpc ValidatorDelayedRewards(QueryValidatorDelayedRewardsRequest) returns (QueryValidatorDelayedRewardsResponse) {
+    option (google.api.http).get = "/icplaza/distribution/v1beta1/validators/"
+                                   "{validator_address}/delayed_rewards";
+  }
+
   // DelegationRewards queries the total rewards accrued by a delegation.
   rpc DelegationRewards(QueryDelegationRewardsRequest) returns (QueryDelegationRewardsResponse) {
     option (google.api.http).get = "/icplaza/distribution/v1beta1/delegators/{delegator_address}/rewards/"
@@ -62,6 +68,7 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/icplaza/distribution/v1beta1/community_pool";
   }
+
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -126,6 +133,23 @@ message QueryValidatorSlashesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+// QueryValidatorDelayedRewardsRequest is the request type for the
+// Query/ValidatorDelayedRewards RPC method
+message QueryValidatorDelayedRewardsRequest {
+  // validator_address defines the validator address to query for.
+  string validator_address = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryValidatorDelayedRewardsResponse is the response type for the
+// Query/ValidatorDelayedRewards RPC method
+message QueryValidatorDelayedRewardsResponse {
+  // commission defines the commision the validator received.
+  repeated ValidatorDelayedReward rewards = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
 // QueryDelegationRewardsRequest is the request type for the
 // Query/DelegationRewards RPC method.
 message QueryDelegationRewardsRequest {
@@ -143,6 +167,9 @@ message QueryDelegationRewardsRequest {
 message QueryDelegationRewardsResponse {
   // rewards defines the rewards accrued by a delegation.
   repeated cosmos.base.v1beta1.DecCoin rewards = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+  // recommanders_rewards defines the recommanders rewards accrued by a delegation.
+  repeated cosmos.base.v1beta1.DecCoin recommanders_rewards = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
 }
 

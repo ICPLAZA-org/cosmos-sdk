@@ -24,7 +24,7 @@ service Query {
   // AllowancesByGranter returns all the grants given by an address
   // Since v0.46
   rpc AllowancesByGranter(QueryAllowancesByGranterRequest) returns (QueryAllowancesByGranterResponse) {
-    option (google.api.http).get = "/icplaza/feegrant/v1beta1/issued/{granter}";
+    option (google.api.http).get = "/cosmos/feegrant/v1beta1/issued/{granter}";
   }
 }
 

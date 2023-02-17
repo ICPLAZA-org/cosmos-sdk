@@ -67,6 +67,7 @@ $ %s query feegrant grant [granter] [grantee]
 					Grantee: granteeAddr.String(),
 				},
 			)
+
 			if err != nil {
 				return err
 			}
@@ -115,6 +116,7 @@ $ %s query feegrant grants-by-grantee [grantee]
 					Pagination: pageReq,
 				},
 			)
+
 			if err != nil {
 				return err
 			}
@@ -163,6 +165,7 @@ $ %s query feegrant grants-by-granter [granter]
 					Pagination: pageReq,
 				},
 			)
+
 			if err != nil {
 				return err
 			}

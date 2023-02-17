@@ -27,7 +27,7 @@ import (
 )
 
 type TestSuite struct {
-	module  module.BeginBlockAppModule
+	module  module.AppModule
 	keeper  keeper.Keeper
 	querier sdk.Querier
 	handler govtypes.Handler
