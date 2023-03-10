@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -68,6 +69,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 			panic(err)
 		}
 		delegatorAddress := sdk.MustAccAddressFromBech32(dvvTriplet.DelegatorAddress)
+
 		balances, err := k.CompleteRedelegation(
 			ctx,
 			delegatorAddress,
@@ -216,7 +218,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	if len(updates) > 0 {
 		k.SetLastTotalPower(ctx, totalPower)
 	}
-
+bz,_:=json.Marshal(updates)
+fmt.Println("ApplyAndReturnValidatorSetUpdates")
+fmt.Println(string(bz))
 	return updates, err
 }
 

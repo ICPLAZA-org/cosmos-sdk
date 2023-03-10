@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -27,21 +26,10 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 
-func (k Keeper) calculateDelegationOnlyRewardsBetween(ctx sdk.Context, val stakingtypes.ValidatorI,
-	startingPeriod, endingPeriod uint64, stake sdk.Dec) (rewards sdk.DecCoins) {
-	rewards, _ = k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake, false)
-	return rewards
-}
-
-func (k Keeper) calculateDelegationAllRewardsBetween(ctx sdk.Context, val stakingtypes.ValidatorI,
-	startingPeriod, endingPeriod uint64, stake sdk.Dec) (rewards sdk.DecCoins, recommandersRewards sdk.DecCoins) {
-	rewards, recommandersRewards = k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake, true)
-	return rewards, recommandersRewards
-}
-
 // calculate the rewards accrued by a delegation between two periods
 func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingtypes.ValidatorI,
-	startingPeriod, endingPeriod uint64, stake sdk.Dec, isCalcRecommandersRewards bool) (rewards sdk.DecCoins, recommandersRewards sdk.DecCoins) {
+	startingPeriod, endingPeriod uint64, stake sdk.Dec,
+) (rewards sdk.DecCoins) {
 	// sanity check
 	if startingPeriod > endingPeriod {
 		panic("startingPeriod cannot be greater than endingPeriod")
@@ -61,23 +49,11 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingty
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards = difference.MulDecTruncate(stake)
-
-	if isCalcRecommandersRewards {
-		difference = ending.CumulativeRecommandersRewardRatio.Sub(starting.CumulativeRecommandersRewardRatio)
-		if difference.IsAnyNegative() {
-			panic("negative recommanders rewards should not be possible")
-		}
-
-		// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-		recommandersRewards = difference.MulDecTruncate(stake)
-	}
-
-	return rewards, recommandersRewards
+	return
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, 
-	endingPeriod uint64) (rewards sdk.DecCoins, recommandersRewards sdk.DecCoins) {
+func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
 	// fetch starting info for delegation
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
@@ -105,8 +81,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
 				if endingPeriod > startingPeriod {
-					// rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
-					rewards = rewards.Add(k.calculateDelegationOnlyRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
+					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
 
 					// Note: It is necessary to truncate so we don't allow withdrawing
 					// more rewards than owed.
@@ -157,22 +132,19 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 	}
 
 	// calculate rewards for final period
-	rewardsL, recommandersRewards := k.calculateDelegationAllRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)
-	// rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
-	rewards = rewards.Add(rewardsL...)
-	return rewards, recommandersRewards
+	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
+	return rewards
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, sdk.Coins, error) {
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
-		return nil, nil, types.ErrEmptyDelegationDistInfo
+		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
 	// end current period and calculate rewards
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-	// rewardsRaw := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	rewardsRaw, recommandersRewardsRaw := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	rewardsRaw := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 	outstanding := k.GetValidatorOutstandingRewardsCoins(ctx, del.GetValidatorAddr())
 
 	// defensive edge case may happen on the very final digits
@@ -189,45 +161,21 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 		)
 	}
 
-	// truncate coins, return remainder to community pool
-	coins, remainder := rewards.TruncateDecimal()
+	// truncate reward dec coins, return remainder to community pool
+	finalRewards, remainder := rewards.TruncateDecimal()
 
 	// add coins to user account
-	if !coins.IsZero() {
+	if !finalRewards.IsZero() {
 		withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins)
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, finalRewards)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
-	// defensive edge case may happen on the very final digits
-	// of the decCoins due to operation order of the distribution mechanism.
-	recommandersRewards := recommandersRewardsRaw.Intersect(outstanding)
-	if !recommandersRewards.IsEqual(recommandersRewardsRaw) {
-		logger := k.Logger(ctx)
-		logger.Info(
-			"rounding error withdrawing recommanders rewards from validator",
-			"delegator", del.GetDelegatorAddr().String(),
-			"validator", val.GetOperator().String(),
-			"got", recommandersRewards.String(),
-			"expected", recommandersRewardsRaw.String(),
-		)
-	}
-	
-	// truncate coins, return remainder to community pool
-	coinsL, remainderL, err := k.withdrawDelegationRecommandersRewards(ctx, val, del, recommandersRewards)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// summary
-	remainder = remainder.Add(remainderL...)
-
 	// update the outstanding rewards and the community pool only if the
 	// transaction was successful
-	// k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
-	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards).Sub(recommandersRewards)})
+	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
 	k.SetFeePool(ctx, feePool)
@@ -240,73 +188,25 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	// remove delegator starting info
 	k.DeleteDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
-	return coins, coinsL, nil
-}
+	emittedRewards := finalRewards
+	if finalRewards.IsZero() {
+		baseDenom, _ := sdk.GetBaseDenom()
+		if baseDenom == "" {
+			baseDenom = sdk.DefaultBondDenom
+		}
 
-func (k Keeper) withdrawDelegationRecommandersRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI,
-	recommandersRewards sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
-	
-	if recommandersRewards.IsZero() {
-		return sdk.Coins{}, sdk.DecCoins{}, nil
+		// Note, we do not call the NewCoins constructor as we do not want the zero
+		// coin removed.
+		emittedRewards = sdk.Coins{sdk.NewCoin(baseDenom, sdk.ZeroInt())}
 	}
 
-	totalRewards := sdk.Coins{}
-	remainderRewards := recommandersRewards
-	currentDel := del
-	_, _, _, recommanderClassRates := val.GetReallocatedCommissionRule()
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawRewards,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, emittedRewards.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
+		),
+	)
 
-	for _, rate := range recommanderClassRates {
-		if currentDel == nil { // to validator
-			break
-		}
-
-		currentRewards := recommandersRewards.MulDec(rate.Rate)
-		if remainderRewards.Sub(currentRewards).IsAnyNegative() {
-			logger := k.Logger(ctx)
-			logger.Info(
-				"rounding error withdrawing a recommander rewards from validator",
-				"delegator", currentDel.GetDelegatorAddr().String(),
-				"validator", val.GetOperator().String(),
-				"got", rate.String(),
-			)
-			break;
-		}
-
-		rewards, remainder := currentRewards.TruncateDecimal()
-		remainderRewards = remainderRewards.Sub(currentRewards).Add(remainder...)
-
-		recommanderAddr := k.getRealRecommander(ctx, currentDel, del.GetValidatorAddr())
-		if recommanderAddr == nil {
-			break;
-		}
-		if !rewards.IsZero() {
-			if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recommanderAddr, rewards); err != nil {
-				return nil, nil, err
-			}
-		}
-		totalRewards = totalRewards.Add(rewards...)
-
-		currentDel = k.stakingKeeper.Delegation(ctx, recommanderAddr, del.GetValidatorAddr())
-	}
-
-	rewards, remainder := remainderRewards.TruncateDecimal()
-	if !rewards.IsZero() {
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(del.GetValidatorAddr()), rewards)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	totalRewards = totalRewards.Add(rewards...)
-	
-	return totalRewards, remainder, nil
-}
-
-func (k Keeper) getRealRecommander(ctx sdk.Context, del stakingtypes.DelegationI, valAddr sdk.ValAddress) sdk.AccAddress {
-	recommanderAddr := del.GetRecommanderAddr()
-
-	if recommanderAddr.Equals(del.GetDelegatorAddr()) {
-		recommanderAddr = nil
-	}
-
-	return recommanderAddr
+	return finalRewards, nil
 }

@@ -2,8 +2,6 @@ package types
 
 import (
 	"encoding/binary"
-	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -55,11 +53,7 @@ var (
 	ValidatorCurrentRewardsPrefix        = []byte{0x06} // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = []byte{0x07} // key for accumulated validator commission
 	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
-	ValidatorDelayedRewardPrefix         = []byte{0x09} // key for validator relayed reward's queue
-	ValidatorDelayedRewardInfoPrefix     = []byte{0x0a} // key for validator relayed rewards info
 )
-
-var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
 // GetValidatorOutstandingRewardsAddress creates an address from a validator's outstanding rewards key.
 func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
@@ -218,50 +212,4 @@ func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	prefix := GetValidatorSlashEventKeyPrefix(v, height)
 
 	return append(prefix, periodBz...)
-}
-
-// GetValidatorDelayedRewardKey creates the key for a validator's relayed reward
-func GetValidatorDelayedRewardKey(v sdk.ValAddress, startTime time.Time) []byte {
-	return append(
-		ValidatorDelayedRewardPrefix,
-		append(address.MustLengthPrefix(v.Bytes()), sdk.FormatTimeBytes(startTime)...)...,
-	)
-}
-
-// GetValidatorDelayedRewardWithAddressPrefix creates the key for a validator's relayed reward
-func GetValidatorDelayedRewardWithAddressPrefix(v sdk.ValAddress) []byte {
-	return append(
-		ValidatorDelayedRewardPrefix, address.MustLengthPrefix(v.Bytes())...,
-	)
-}
-
-
-// GetValidatorDelayedRewardInfoKey creates the key for a validator's relayed rewards info
-func GetValidatorDelayedRewardInfoKey(v sdk.ValAddress) []byte {
-	return append(ValidatorDelayedRewardInfoPrefix, address.MustLengthPrefix(v.Bytes())...)
-}
-
-// SplitValidatorDelayedRewardKey
-func SplitValidatorDelayedRewardKey(key []byte) (valAddr sdk.ValAddress, startTime time.Time) {
-	return splitKeyWithTime(key)
-}
-
-// private functions
-
-func splitKeyWithTime(key []byte) (valAddr sdk.ValAddress, startTime time.Time) {
-	// key is in the format:
-	// 0x09<valAddrLen (1 Byte)><valAddr_Bytes><period_Bytes>
-	kv.AssertKeyAtLeastLength(key, 3)
-	valAddrLen := int(key[1])
-	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
-
-	if len(key[2:]) != (valAddrLen+lenTime) {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[2:]), (lenTime+valAddrLen)))
-	}
-	startTime, err := sdk.ParseTimeBytes(key[2+valAddrLen : ])
-	if err != nil {
-		panic(err)
-	}
-
-	return
 }

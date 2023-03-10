@@ -76,3 +76,41 @@ func (c ReallocatedCommissionRule) Validate() error {
 func (c ReallocatedCommissionRule) validateRecommanderClassRates() error {
 	return validateRecommanderClassRates(c.RecommanderClassRates)
 }
+
+func (c ReallocatedCommissionRule) ValidateRCommissionNewRate(newValidatorRate, newRecommanderRate sdk.Dec, blockTime time.Time) error {
+	switch {
+	case blockTime.Sub(c.UpdateTime).Hours() < 24:
+		// new rate cannot be changed more than once within 24 hours
+		return ErrCommissionUpdateTime
+
+	case newValidatorRate.IsNegative():
+		// new rate cannot be negative
+		return ErrCommissionNegative
+
+	case newRecommanderRate.IsNegative():
+		// new rate cannot be negative
+		return ErrCommissionNegative
+
+	case newValidatorRate.Add(newRecommanderRate).GT(sdk.OneDec()):
+		// new rate % points change cannot be greater than the max change rate
+		return ErrCommissionGTMaxChangeRate
+	}
+
+	return nil
+}
+
+
+func (c ReallocatedCommissionRule) ValidateRecommanderNewRule(incentiveDepth uint32, recommanderClassRates []RecommanderClassRate, blockTime time.Time) error {
+	switch {
+	case blockTime.Sub(c.UpdateTime).Hours() < 24:
+		// new rate cannot be changed more than once within 24 hours
+		return ErrCommissionUpdateTime
+
+	case int(incentiveDepth) != len(recommanderClassRates) :
+		// mismatch
+		return ErrMismatchRecommanderClass
+		
+	}
+
+	return nil
+}

@@ -1,13 +1,14 @@
 package types // noalias
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // StakingKeeper defines the expected staking keeper
 type StakingKeeper interface {
-	StakingTokenSupply(ctx sdk.Context) sdk.Int
+	StakingTokenSupply(ctx sdk.Context) math.Int
 	BondedRatio(ctx sdk.Context) sdk.Dec
 }
 
@@ -28,12 +29,6 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	GetDeflation(ctx sdk.Context, denom string) sdk.Coin
 }
-
-// Event Hooks
-// These can be utilized to communicate between a mint keeper and another
-// keeper which must take particular actions when minting change
-// state. The second keeper must implement this interface, which then the
-// mint keeper can call.
 
 // MintHooks event hooks for mint object (noalias)
 type MintHooks interface {

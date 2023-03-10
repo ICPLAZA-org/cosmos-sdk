@@ -5,6 +5,7 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -295,7 +296,7 @@ func (m *ValidatorAccumulatedCommission) GetTeamCommission() github_com_cosmos_c
 // ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards
 // for a validator inexpensive to track, allows simple sanity checks.
 type ValidatorOutstandingRewards struct {
-	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards" yaml:"rewards"`
+	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
 }
 
 func (m *ValidatorOutstandingRewards) Reset()         { *m = ValidatorOutstandingRewards{} }
@@ -343,7 +344,7 @@ func (m *ValidatorOutstandingRewards) GetRewards() github_com_cosmos_cosmos_sdk_
 // This is needed to calculate appropriate amount of staking tokens
 // for delegations which are withdrawn after a slash has occurred.
 type ValidatorSlashEvent struct {
-	ValidatorPeriod uint64                                 `protobuf:"varint,1,opt,name=validator_period,json=validatorPeriod,proto3" json:"validator_period,omitempty" yaml:"validator_period"`
+	ValidatorPeriod uint64                                 `protobuf:"varint,1,opt,name=validator_period,json=validatorPeriod,proto3" json:"validator_period,omitempty"`
 	Fraction        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=fraction,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fraction"`
 }
 
@@ -389,7 +390,7 @@ func (m *ValidatorSlashEvent) GetValidatorPeriod() uint64 {
 
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
 type ValidatorSlashEvents struct {
-	ValidatorSlashEvents []ValidatorSlashEvent `protobuf:"bytes,1,rep,name=validator_slash_events,json=validatorSlashEvents,proto3" json:"validator_slash_events" yaml:"validator_slash_events"`
+	ValidatorSlashEvents []ValidatorSlashEvent `protobuf:"bytes,1,rep,name=validator_slash_events,json=validatorSlashEvents,proto3" json:"validator_slash_events"`
 }
 
 func (m *ValidatorSlashEvents) Reset()      { *m = ValidatorSlashEvents{} }
@@ -433,7 +434,7 @@ func (m *ValidatorSlashEvents) GetValidatorSlashEvents() []ValidatorSlashEvent {
 
 // FeePool is the global fee pool for distribution.
 type FeePool struct {
-	CommunityPool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=community_pool,json=communityPool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"community_pool" yaml:"community_pool"`
+	CommunityPool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=community_pool,json=communityPool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"community_pool"`
 }
 
 func (m *FeePool) Reset()         { *m = FeePool{} }
@@ -525,9 +526,9 @@ var xxx_messageInfo_CommunityPoolSpendProposal proto.InternalMessageInfo
 // the delegators within the validator may be left with less than a full token,
 // thus sdk.Dec is used.
 type DelegatorStartingInfo struct {
-	PreviousPeriod uint64                                 `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty" yaml:"previous_period"`
-	Stake          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=stake,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"stake" yaml:"stake"`
-	Height         uint64                                 `protobuf:"varint,3,opt,name=height,proto3" json:"creation_height" yaml:"creation_height"`
+	PreviousPeriod uint64                                 `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty"`
+	Stake          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=stake,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"stake"`
+	Height         uint64                                 `protobuf:"varint,3,opt,name=height,proto3" json:"creation_height"`
 }
 
 func (m *DelegatorStartingInfo) Reset()         { *m = DelegatorStartingInfo{} }
@@ -580,7 +581,7 @@ func (m *DelegatorStartingInfo) GetHeight() uint64 {
 // DelegationDelegatorReward represents the properties
 // of a delegator's delegation reward.
 type DelegationDelegatorReward struct {
-	ValidatorAddress string                                      `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress string                                      `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 	Reward           github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=reward,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"reward"`
 }
 
@@ -620,11 +621,11 @@ var xxx_messageInfo_DelegationDelegatorReward proto.InternalMessageInfo
 // CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal
 // with a deposit
 type CommunityPoolSpendProposalWithDeposit struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
-	Recipient   string `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty" yaml:"recipient"`
-	Amount      string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty" yaml:"amount"`
-	Deposit     string `protobuf:"bytes,5,opt,name=deposit,proto3" json:"deposit,omitempty" yaml:"deposit"`
+	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Recipient   string `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	Amount      string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	Deposit     string `protobuf:"bytes,5,opt,name=deposit,proto3" json:"deposit,omitempty"`
 }
 
 func (m *CommunityPoolSpendProposalWithDeposit) Reset()         { *m = CommunityPoolSpendProposalWithDeposit{} }

@@ -28,7 +28,7 @@ type SlashingTestSuite struct {
 }
 
 func (suite *SlashingTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -91,7 +91,7 @@ func (suite *SlashingTestSuite) TestGRPCSigningInfos() {
 	})
 
 	// verify all values are returned without pagination
-	var infoResp, err = queryClient.SigningInfos(gocontext.Background(),
+	infoResp, err := queryClient.SigningInfos(gocontext.Background(),
 		&types.QuerySigningInfosRequest{Pagination: nil})
 	suite.NoError(err)
 	suite.Equal(signingInfos, infoResp.Info)

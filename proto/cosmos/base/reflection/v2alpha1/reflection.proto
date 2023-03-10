@@ -117,27 +117,27 @@ service ReflectionService {
   // NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
   // future releases of the cosmos-sdk.
   rpc GetAuthnDescriptor(GetAuthnDescriptorRequest) returns (GetAuthnDescriptorResponse) {
-    option (google.api.http).get = "/icplaza/base/reflection/v1beta1/app_descriptor/authn";
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/authn";
   }
   // GetChainDescriptor returns the description of the chain
   rpc GetChainDescriptor(GetChainDescriptorRequest) returns (GetChainDescriptorResponse) {
-    option (google.api.http).get = "/icplaza/base/reflection/v1beta1/app_descriptor/chain";
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/chain";
   };
   // GetCodecDescriptor returns the descriptor of the codec of the application
   rpc GetCodecDescriptor(GetCodecDescriptorRequest) returns (GetCodecDescriptorResponse) {
-    option (google.api.http).get = "/icplaza/base/reflection/v1beta1/app_descriptor/codec";
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/codec";
   }
   // GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
   rpc GetConfigurationDescriptor(GetConfigurationDescriptorRequest) returns (GetConfigurationDescriptorResponse) {
-    option (google.api.http).get = "/icplaza/base/reflection/v1beta1/app_descriptor/configuration";
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/configuration";
   }
   // GetQueryServicesDescriptor returns the available gRPC queryable services of the application
   rpc GetQueryServicesDescriptor(GetQueryServicesDescriptorRequest) returns (GetQueryServicesDescriptorResponse) {
-    option (google.api.http).get = "/icplaza/base/reflection/v1beta1/app_descriptor/query_services";
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/query_services";
   }
   // GetTxDescriptor returns information on the used transaction object and available msgs that can be used
   rpc GetTxDescriptor(GetTxDescriptorRequest) returns (GetTxDescriptorResponse) {
-    option (google.api.http).get = "/icplaza/base/reflection/v1beta1/app_descriptor/tx_descriptor";
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/tx_descriptor";
   }
 }
 

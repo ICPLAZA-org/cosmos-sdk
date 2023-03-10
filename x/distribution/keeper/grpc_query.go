@@ -41,7 +41,6 @@ func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryV
 	if err != nil {
 		return nil, err
 	}
-	k.WithdrawValidatorDelayedRewardsOf(ctx, valAdr)
 	rewards := k.GetValidatorOutstandingRewards(ctx, valAdr)
 
 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: rewards}, nil
@@ -63,7 +62,6 @@ func (k Keeper) ValidatorCommission(c context.Context, req *types.QueryValidator
 	if err != nil {
 		return nil, err
 	}
-	k.WithdrawValidatorDelayedRewardsOf(ctx, valAdr)
 	commission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
 
 	return &types.QueryValidatorCommissionResponse{Commission: commission}, nil
@@ -84,7 +82,6 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	events := make([]types.ValidatorSlashEvent, 0)
 	store := ctx.KVStore(k.storeKey)
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
@@ -92,72 +89,25 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	}
 	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
 
-	pageRes, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var result types.ValidatorSlashEvent
-		err := k.cdc.Unmarshal(value, &result)
-
-		if err != nil {
-			return false, err
-		}
-
+	events, pageRes, err := query.GenericFilteredPaginate(k.cdc, slashesStore, req.Pagination, func(key []byte, result *types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
 		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
-			return false, nil
+			return nil, nil
 		}
 
-		if accumulate {
-			events = append(events, result)
-		}
-		return true, nil
+		return result, nil
+	}, func() *types.ValidatorSlashEvent {
+		return &types.ValidatorSlashEvent{}
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryValidatorSlashesResponse{Slashes: events, Pagination: pageRes}, nil
-}
-
-// ValidatorDelayedRewards queries accumulated delayed rewards for a validator
-func (k Keeper) ValidatorDelayedRewards(c context.Context, req *types.QueryValidatorDelayedRewardsRequest) (*types.QueryValidatorDelayedRewardsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	slashes := []types.ValidatorSlashEvent{}
+	for _, event := range events {
+		slashes = append(slashes, *event)
 	}
 
-	if req.ValidatorAddress == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty validator address")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
-	if err != nil {
-		return nil, err
-	}
-	k.WithdrawValidatorDelayedRewardsOf(ctx, valAdr)
-	
-	rewards := make([]types.ValidatorDelayedReward, 0)
-
-	store := ctx.KVStore(k.storeKey)
-	delayedRewardStore := prefix.NewStore(store, types.GetValidatorDelayedRewardWithAddressPrefix(valAdr))
-	pageRes, err := query.FilteredPaginate(delayedRewardStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var result types.ValidatorDelayedReward
-		err := k.cdc.Unmarshal(value, &result)
-
-		if err != nil {
-			return false, err
-		}
-
-		if accumulate {
-			rewards = append(rewards, result)
-		}
-		return true, nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryValidatorDelayedRewardsResponse{Rewards: rewards, Pagination: pageRes}, nil
+	return &types.QueryValidatorSlashesResponse{Slashes: slashes, Pagination: pageRes}, nil
 }
 
 // DelegationRewards the total rewards accrued by a delegation
@@ -195,13 +145,10 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 		return nil, types.ErrNoDelegationExists
 	}
 
-	k.WithdrawValidatorDelayedRewardsOf(ctx, valAdr)
-
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-	// rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-	rewards, recommandersRewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
-	return &types.QueryDelegationRewardsResponse{Rewards: rewards, RecommandersRewards:recommandersRewards}, nil
+	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
 }
 
 // DelegationTotalRewards the total rewards accrued by a each validator
@@ -229,12 +176,8 @@ func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelega
 		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
-
-			k.WithdrawValidatorDelayedRewardsOf(ctx, valAddr)
-
 			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-			// delReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-			delReward, _ := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+			delReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
 			total = total.Add(delReward...)

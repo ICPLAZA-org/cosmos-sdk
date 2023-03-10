@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -18,7 +17,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	for _, dwi := range data.DelegatorWithdrawInfos {
 		delegatorAddress := sdk.MustAccAddressFromBech32(dwi.DelegatorAddress)
 		withdrawAddress := sdk.MustAccAddressFromBech32(dwi.WithdrawAddress)
-
 		k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
 	}
 
@@ -68,6 +66,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			panic(err)
 		}
 		delegatorAddress := sdk.MustAccAddressFromBech32(del.DelegatorAddress)
+
 		k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
 	}
 	for _, evt := range data.ValidatorSlashEvents {
@@ -77,14 +76,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		}
 		k.SetValidatorSlashEvent(ctx, valAddr, evt.Height, evt.Period, evt.ValidatorSlashEvent)
 	}
-	for _, relay := range data.ValidatorDelayedRewards {
-		valAddr, err := sdk.ValAddressFromBech32(relay.ValidatorAddress)
-		if err != nil {
-			panic(err)
-		}
-		k.SetValidatorDelayedReward(ctx, valAddr, relay.StartTime, relay.ValidatorDelayedReward)
-	}
-
 
 	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
 	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
@@ -190,17 +181,5 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		},
 	)
 
-	relayedRewards := make([]types.ValidatorDelayedRewardRecord, 0)
-	k.IterateValidatorDelayedRewards(ctx,
-		func(val sdk.ValAddress, startTime time.Time, v types.ValidatorDelayedReward) (stop bool) {
-			relayedRewards = append(relayedRewards, types.ValidatorDelayedRewardRecord{
-				ValidatorAddress: val.String(),
-				StartTime: startTime,
-				ValidatorDelayedReward: v,
-			})
-			return false
-		},
-	)
-
-	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes, relayedRewards)
+	return types.NewGenesisState(params, feePool, dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

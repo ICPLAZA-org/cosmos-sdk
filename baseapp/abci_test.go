@@ -1,14 +1,18 @@
 package baseapp
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,6 +20,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
+
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
+	require.NoError(t, err)
 
 	testCases := map[string]struct {
 		bapp         *BaseApp
@@ -38,18 +45,18 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning iavl snapshot only": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
+				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
 				SetMinRetainBlocks(1),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
-			expected:     490000,
+			expected:     489000,
 		},
 		"pruning state sync snapshot only": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetSnapshotInterval(50000),
-				SetSnapshotKeepRecent(3),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 				SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
@@ -68,9 +75,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"pruning all conditions": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				SetMinRetainBlocks(400000),
-				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -79,9 +86,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"no pruning due to no persisted state": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				SetMinRetainBlocks(400000),
-				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
@@ -90,9 +97,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		"disable pruning": {
 			bapp: NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(sdk.PruningOptions{KeepEvery: 10000}),
+				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
 				SetMinRetainBlocks(0),
-				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
+				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -106,7 +113,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		tc.bapp.InitChain(abci.RequestInitChain{
 			ConsensusParams: &abci.ConsensusParams{
-				Evidence: &tmprototypes.EvidenceParams{
+				Evidence: &tmproto.EvidenceParams{
 					MaxAgeNumBlocks: tc.maxAgeBlocks,
 				},
 			},
@@ -157,5 +164,42 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 				require.NoError(t, err)
 			}
 		})
+	}
+}
+
+type paramStore struct {
+	db *dbm.MemDB
+}
+
+func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
+	bz, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+
+	ps.db.Set(key, bz)
+}
+
+func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
+	ok, err := ps.db.Has(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return ok
+}
+
+func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
+	bz, err := ps.db.Get(key)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(bz) == 0 {
+		return
+	}
+
+	if err := json.Unmarshal(bz, ptr); err != nil {
+		panic(err)
 	}
 }

@@ -84,7 +84,7 @@ func (k msgServer) WithdrawDelegatorReward(goCtx context.Context, msg *types.Msg
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	)
-	return &types.MsgWithdrawDelegatorRewardResponse{}, nil
+	return &types.MsgWithdrawDelegatorRewardResponse{Amount: amount}, nil
 }
 
 func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types.MsgWithdrawValidatorCommission) (*types.MsgWithdrawValidatorCommissionResponse, error) {
@@ -119,7 +119,7 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 		),
 	)
 
-	return &types.MsgWithdrawValidatorCommissionResponse{}, nil
+	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
 func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
@@ -142,39 +142,4 @@ func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCo
 	)
 
 	return &types.MsgFundCommunityPoolResponse{}, nil
-}
-
-func (k msgServer) WithdrawTeamCommission(goCtx context.Context, msg *types.MsgWithdrawTeamCommission) (*types.MsgWithdrawTeamCommissionResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
-		return nil, err
-	}
-	amount, err := k.Keeper.WithdrawTeamCommission(ctx, valAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		for _, a := range amount {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "withdraw_team_commission"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress),
-		),
-	)
-
-	return &types.MsgWithdrawTeamCommissionResponse{}, nil
 }

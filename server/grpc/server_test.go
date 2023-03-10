@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package grpc_test
@@ -7,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/jhump/protoreflect/grpcreflect"
 
@@ -45,19 +48,22 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	s.app = simapp.Setup(false)
+	s.app = simapp.Setup(s.T(), false)
 	s.cfg = network.DefaultConfig()
 	s.cfg.NumValidators = 1
-	s.network = network.New(s.T(), s.cfg)
-	s.Require().NotNil(s.network)
 
-	_, err := s.network.WaitForHeight(2)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 
 	val0 := s.network.Validators[0]
 	s.conn, err = grpc.Dial(
 		val0.AppConfig.GRPC.Address,
 		grpc.WithInsecure(), // Or else we get "no transport security set"
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.app.InterfaceRegistry()).GRPCCodec())),
 	)
 	s.Require().NoError(err)
 }

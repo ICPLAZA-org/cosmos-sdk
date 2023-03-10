@@ -87,6 +87,7 @@ func WeightedOperations(
 			weightMsgBeginRedelegate,
 			SimulateMsgBeginRedelegate(ak, bk, k),
 		),
+
 	}
 }
 
@@ -123,7 +124,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 		var fees sdk.Coins
 
-		coins, hasNeg := spendable.SafeSub(sdk.Coins{selfDelegation})
+		coins, hasNeg := spendable.SafeSub(selfDelegation)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -160,6 +161,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		}
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
@@ -275,7 +277,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 
 		var fees sdk.Coins
 
-		coins, hasNeg := spendable.SafeSub(sdk.Coins{bondAmt})
+		coins, hasNeg := spendable.SafeSub(bondAmt)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -286,6 +288,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), recommanderAccount.Address, bondAmt)
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
@@ -379,6 +382,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
+
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
 func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -55,6 +56,7 @@ func NewTxCmd() *cobra.Command {
 	return stakingTxCmd
 }
 
+// NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
 func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
@@ -96,6 +98,7 @@ func NewCreateValidatorCmd() *cobra.Command {
 	return cmd
 }
 
+// NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
 func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
@@ -106,7 +109,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				return err
 			}
 			valAddr := clientCtx.GetFromAddress()
-			moniker, _ := cmd.Flags().GetString(FlagMoniker)
+			moniker, _ := cmd.Flags().GetString(FlagEditMoniker)
 			identity, _ := cmd.Flags().GetString(FlagIdentity)
 			website, _ := cmd.Flags().GetString(FlagWebsite)
 			security, _ := cmd.Flags().GetString(FlagSecurityContact)
@@ -114,7 +117,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			description := types.NewDescription(moniker, identity, website, security, details)
 			incentiveTeamAddress, _ := cmd.Flags().GetString(FlagAddressIncentiveTeam)
 
-			var newRate *sdk.Dec
+			var newCommissionRate *sdk.Dec
 
 			commissionRate, _ := cmd.Flags().GetString(FlagCommissionRate)
 			if commissionRate != "" {
@@ -123,10 +126,10 @@ func NewEditValidatorCmd() *cobra.Command {
 					return fmt.Errorf("invalid new commission rate: %v", err)
 				}
 
-				newRate = &rate
+				newCommissionRate = &rate
 			}
 
-			var newMinSelfDelegation *sdk.Int
+			var newMinSelfDelegation *math.Int
 
 			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
@@ -138,7 +141,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newMinSelfDelegation = &msb
 			}
 
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), incentiveTeamAddress, description, newRate, newMinSelfDelegation)
+			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), incentiveTeamAddress, description, newCommissionRate, newMinSelfDelegation)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -153,6 +156,7 @@ func NewEditValidatorCmd() *cobra.Command {
 	return cmd
 }
 
+// NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
 func NewDelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -207,6 +211,7 @@ $ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --f
 	return cmd
 }
 
+// NewRedelegateCmd returns a CLI command handler for creating a MsgBeginRedelegate transaction.
 func NewRedelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -255,6 +260,7 @@ $ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp3
 	return cmd
 }
 
+// NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
 func NewUnbondCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -400,7 +406,6 @@ $ %s tx staking edit-recommander-rule --from mykey  --incentive-depth=%s --incen
 
 	return cmd
 }
-
 
 func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, *types.MsgCreateValidator, error) {
 	fAmount, _ := fs.GetString(FlagAmount)
@@ -693,7 +698,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
 	amount, err := sdk.ParseCoinNormalized(amounstStr)
-
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -712,7 +716,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	maxRateStr := config.CommissionMaxRate
 	maxChangeRateStr := config.CommissionMaxChangeRate
 	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
-
 	if err != nil {
 		return txBldr, nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -96,7 +97,8 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	tokensToAdd sdk.Int, newDelegator bool) (valOut types.Validator, addedShares sdk.Dec) {
+	tokensToAdd sdk.Int, newDelegator bool,
+) (valOut types.Validator, addedShares sdk.Dec) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
 	if newDelegator {
@@ -110,7 +112,8 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Int) {
+	sharesToRemove sdk.Dec,
+) (valOut types.Validator, removedTokens sdk.Int) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
 	validator.Delegators = validator.Delegators.Sub(sdk.OneInt())
@@ -122,7 +125,8 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
-	validator types.Validator, tokensToRemove sdk.Int) types.Validator {
+	validator types.Validator, tokensToRemove math.Int,
+) types.Validator {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator = validator.RemoveTokens(tokensToRemove)
 	k.SetValidator(ctx, validator)
@@ -134,7 +138,8 @@ func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
 // UpdateValidatorCommission attempts to update a validator's commission rate.
 // An error is returned if the new commission rate is invalid.
 func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
-	validator types.Validator, newRate sdk.Dec) (types.Commission, error) {
+	validator types.Validator, newRate sdk.Dec,
+) (types.Commission, error) {
 	commission := validator.Commission
 	blockTime := ctx.BlockHeader().Time
 
@@ -146,6 +151,41 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
 	commission.UpdateTime = blockTime
 
 	return commission, nil
+}
+
+// UpdateValidatorRCommission attempts to update a validator's rcommission rate.
+// An error is returned if the new commission rate is invalid.
+func (k Keeper) UpdateValidatorRCommission(ctx sdk.Context,
+	validator types.Validator, newValidatorRate, newRecommandersRate sdk.Dec,
+) (types.ReallocatedCommissionRule, error) {
+	rCommission := validator.ReallocatedCommissionRule
+	blockTime := ctx.BlockHeader().Time
+
+	if err := rCommission.ValidateRCommissionNewRate(newValidatorRate, newRecommandersRate, blockTime); err != nil {
+		return rCommission, err
+	}
+
+	rCommission.ValidatorRate = newValidatorRate
+	rCommission.RecommandersRate = newRecommandersRate
+	rCommission.UpdateTime = blockTime
+
+	return rCommission, nil
+}
+func (k Keeper) UpdateValidatorRecommanderRule(ctx sdk.Context,
+	validator types.Validator,incentiveDepth uint32, recommanderClassRates []types.RecommanderClassRate,
+) (types.ReallocatedCommissionRule, error) {
+	rCommission := validator.ReallocatedCommissionRule
+	blockTime := ctx.BlockHeader().Time
+
+	if err := rCommission.ValidateRecommanderNewRule(incentiveDepth, recommanderClassRates, blockTime); err != nil {
+		return rCommission, err
+	}
+
+	rCommission.IncentiveDepth = incentiveDepth
+	rCommission.RecommanderClassRates = recommanderClassRates
+	rCommission.UpdateTime = blockTime
+
+	return rCommission, nil
 }
 
 // remove the validator record and associated indexes

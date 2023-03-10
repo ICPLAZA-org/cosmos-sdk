@@ -190,7 +190,6 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 
 	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
 	delegationResps, err := DelegationsToDelegationResponses(ctx, k, delegations)
-
 	if err != nil {
 		return nil, err
 	}
@@ -504,6 +503,7 @@ func RedelegationsToRedelegationResponses(
 		}
 
 		delegatorAddress := sdk.MustAccAddressFromBech32(redel.DelegatorAddress)
+
 		val, found := k.GetValidator(ctx, valDstAddr)
 		if !found {
 			return nil, types.ErrNoValidatorFound

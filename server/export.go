@@ -4,7 +4,6 @@ package server
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -39,7 +38,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
-			db, err := openDB(config.RootDir)
+			db, err := openDB(config.RootDir, GetAppDBBackend(serverCtx.Viper))
 			if err != nil {
 				return err
 			}
@@ -49,7 +48,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 					return err
 				}
 
-				genesis, err := ioutil.ReadFile(config.GenesisFile())
+				genesis, err := os.ReadFile(config.GenesisFile())
 				if err != nil {
 					return err
 				}
@@ -105,6 +104,8 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
+			cmd.SetOut(cmd.OutOrStdout())
+			cmd.SetErr(cmd.OutOrStderr())
 			cmd.Println(string(sdk.MustSortJSON(encoded)))
 			return nil
 		},

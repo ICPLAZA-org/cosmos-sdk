@@ -47,15 +47,14 @@ func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 	// assuming they've now bonded above their minimum self-delegation.
 	info, found := k.GetValidatorSigningInfo(ctx, consAddr)
 	if found {
-		// disable this funciton by xu 20230212
 		// cannot be unjailed if tombstoned
 		if info.Tombstoned {
-		//	return types.ErrValidatorJailed
+			return types.ErrValidatorJailed
 		}
 
 		// cannot be unjailed until out of jail
 		if ctx.BlockHeader().Time.Before(info.JailedUntil) {
-		//	return types.ErrValidatorJailed
+			return types.ErrValidatorJailed
 		}
 	}
 

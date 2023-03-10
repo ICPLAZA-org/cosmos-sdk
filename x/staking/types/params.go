@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	yaml "gopkg.in/yaml.v2"
+	"cosmossdk.io/math"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,6 +35,9 @@ const (
 	// Default maximum depth of incentive
 	DefaultMaxIncentiveDepth uint32 = 50
 )
+
+// DefaultMinCommissionRate is set to 0%
+var DefaultMinCommissionRate = sdk.ZeroDec()
 
 var (
 	KeyUnbondingTime     = []byte("UnbondingTime")
@@ -73,6 +77,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyMaxIncentiveDepth, &p.MaxIncentiveDepth, validateMaxIncentiveDepth),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
+	
 	}
 }
 
@@ -219,7 +224,7 @@ func validateBondDenom(i interface{}) error {
 }
 
 func ValidatePowerReduction(i interface{}) error {
-	v, ok := i.(sdk.Int)
+	v, ok := i.(math.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -230,3 +235,5 @@ func ValidatePowerReduction(i interface{}) error {
 
 	return nil
 }
+
+

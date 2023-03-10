@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	metrics "github.com/armon/go-metrics"
-	tmstrings "github.com/tendermint/tendermint/libs/strings"
+
+	"github.com/armon/go-metrics"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -62,7 +62,15 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 	cp := ctx.ConsensusParams()
 	if cp != nil && cp.Validator != nil {
-		if !tmstrings.StringInSlice(pk.Type(), cp.Validator.PubKeyTypes) {
+		pkType := pk.Type()
+		hasKeyType := false
+		for _, keyType := range cp.Validator.PubKeyTypes {
+			if pkType == keyType {
+				hasKeyType = true
+				break
+			}
+		}
+		if !hasKeyType {
 			return nil, sdkerrors.Wrapf(
 				types.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
@@ -74,6 +82,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	if err != nil {
 		return nil, err
 	}
+
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
@@ -124,7 +133,9 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
-	k.AfterValidatorCreated(ctx, validator.GetOperator())
+	if err := k.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+		return nil, err
+	}
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
@@ -185,7 +196,9 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		// call the before-modification hook since we're about to update the commission
-		k.BeforeValidatorModified(ctx, valAddr)
+		if err := k.BeforeValidatorModified(ctx, valAddr); err != nil {
+			return nil, err
+		}
 
 		validator.Commission = commission
 	}
@@ -199,7 +212,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 			return nil, types.ErrSelfDelegationBelowMinimum
 		}
 
-		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
+		validator.MinSelfDelegation = *msg.MinSelfDelegation
 	}
 
 	k.SetValidator(ctx, validator)
@@ -422,25 +435,20 @@ func (k msgServer) EditValidatorRCommissionRule(goCtx context.Context, msg *type
 	if err != nil {
 		return nil, err
 	}
-
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
 
-	reallocatedCommissionRule := types.NewReallocatedCommissionRuleWithTime(
-		msg.ValidatorRate,
-		msg.RecommandersRate,
-		validator.ReallocatedCommissionRule.IncentiveDepth,
-		validator.ReallocatedCommissionRule.RecommanderClassRates,
-		ctx.BlockHeader().Time,
-	)
-
-	validator, err = validator.SetInitialReallocatedCommissionRule(reallocatedCommissionRule)
+	rCommission, err := k.UpdateValidatorRCommission(ctx, validator, msg.ValidatorRate, msg.RecommandersRate)
 	if err != nil {
 		return nil, err
 	}
+
+	validator.ReallocatedCommissionRule = rCommission
+
+	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -462,11 +470,6 @@ func (k msgServer) EditValidatorRCommissionRule(goCtx context.Context, msg *type
 func (k msgServer) EditValidatorRecommanderRule(goCtx context.Context, msg *types.MsgEditValidatorRecommanderRule) (*types.MsgEditValidatorRecommanderRuleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
-		return nil, err
-	}
-
 	if msg.IncentiveDepth > k.Keeper.MaxIncentiveDepth(ctx) {
 		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid incentive depth: got %d, expected depth is not greater than %d", 
@@ -474,24 +477,24 @@ func (k msgServer) EditValidatorRecommanderRule(goCtx context.Context, msg *type
                 )
 	}
 
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
 
-	reallocatedCommissionRule := types.NewReallocatedCommissionRuleWithTime(
-		validator.ReallocatedCommissionRule.ValidatorRate,
-		validator.ReallocatedCommissionRule.RecommandersRate,
-		msg.IncentiveDepth,
-		msg.RecommanderClassRates,
-		ctx.BlockHeader().Time,
-	)
-
-	validator, err = validator.SetInitialReallocatedCommissionRule(reallocatedCommissionRule)
+	rCommission, err := k.UpdateValidatorRecommanderRule(ctx, validator, msg.IncentiveDepth, msg.RecommanderClassRates)
 	if err != nil {
 		return nil, err
 	}
+
+	validator.ReallocatedCommissionRule = rCommission
+
+	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -65,7 +64,6 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
 func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-
 		// cache, we don't want to write changes
 		ctx, _ = ctx.CacheContext()
 
@@ -107,7 +105,6 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 // ReferenceCountInvariant checks that the number of historical rewards records is correct
 func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-
 		valCount := uint64(0)
 		k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 			valCount++
@@ -138,15 +135,9 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 // is consistent with the sum of validator outstanding rewards
 func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-
 		var expectedCoins sdk.DecCoins
 		k.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool) {
 			expectedCoins = expectedCoins.Add(rewards.Rewards...)
-			return false
-		})
-
-		k.IterateValidatorDelayedRewards(ctx, func(_ sdk.ValAddress, _ time.Time, rewards types.ValidatorDelayedReward) (stop bool) {
-			expectedCoins = expectedCoins.Add(rewards.Reward...)
 			return false
 		})
 

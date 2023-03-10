@@ -32,7 +32,6 @@ $ %s query %s --page=2 --limit=50
 			),
 		),
 		Args:                       cobra.MaximumNArgs(1),
-		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       QueryEvidenceCmd(),
 	}
@@ -74,7 +73,6 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 
 	params := &types.QueryEvidenceRequest{EvidenceHash: decodedHash}
 	res, err := queryClient.Evidence(context.Background(), params)
-
 	if err != nil {
 		return err
 	}

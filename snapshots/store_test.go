@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -20,14 +18,7 @@ import (
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
-	// ioutil.TempDir() is used instead of testing.T.TempDir()
-	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
-	// this change's rationale.
-	tempdir, err := ioutil.TempDir("", "")
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
-
-	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
+	store, err := snapshots.NewStore(db.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 
 	_, err = store.Save(1, 1, makeChunks([][]byte{
@@ -89,7 +80,10 @@ func TestStore_Delete(t *testing.T) {
 
 	// Deleting a snapshot being saved should error
 	ch := make(chan io.ReadCloser)
-	go store.Save(9, 1, ch)
+	go func() {
+		_, err := store.Save(9, 1, ch)
+		require.NoError(t, err)
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 	err = store.Delete(9, 1)
@@ -120,7 +114,8 @@ func TestStore_Get(t *testing.T) {
 		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 		Metadata: types.Metadata{
 			ChunkHashes: checksums([][]byte{
-				{2, 1, 0}, {2, 1, 1}}),
+				{2, 1, 0}, {2, 1, 1},
+			}),
 		},
 	}, snapshot)
 }
@@ -155,16 +150,20 @@ func TestStore_List(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, []*types.Snapshot{
-		{Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
+		{
+			Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}})},
 		},
-		{Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
+		{
+			Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}})},
 		},
-		{Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
+		{
+			Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 1, 0}, {2, 1, 1}})},
 		},
-		{Height: 1, Format: 1, Chunks: 2, Hash: hash([][]byte{{1, 1, 0}, {1, 1, 1}}),
+		{
+			Height: 1, Format: 1, Chunks: 2, Hash: hash([][]byte{{1, 1, 0}, {1, 1, 1}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{1, 1, 0}, {1, 1, 1}})},
 		},
 	}, snapshots)
@@ -188,14 +187,15 @@ func TestStore_Load(t *testing.T) {
 		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 		Metadata: types.Metadata{
 			ChunkHashes: checksums([][]byte{
-				{2, 1, 0}, {2, 1, 1}}),
+				{2, 1, 0}, {2, 1, 1},
+			}),
 		},
 	}, snapshot)
 
 	for i := uint32(0); i < snapshot.Chunks; i++ {
 		reader, ok := <-chunks
 		require.True(t, ok)
-		chunk, err := ioutil.ReadAll(reader)
+		chunk, err := io.ReadAll(reader)
 		require.NoError(t, err)
 		err = reader.Close()
 		require.NoError(t, err)
@@ -220,7 +220,7 @@ func TestStore_LoadChunk(t *testing.T) {
 	chunk, err = store.LoadChunk(2, 1, 0)
 	require.NoError(t, err)
 	require.NotNil(t, chunk)
-	body, err := ioutil.ReadAll(chunk)
+	body, err := io.ReadAll(chunk)
 	require.NoError(t, err)
 	assert.Equal(t, []byte{2, 1, 0}, body)
 	err = chunk.Close()
@@ -246,13 +246,16 @@ func TestStore_Prune(t *testing.T) {
 	snapshots, err = store.List()
 	require.NoError(t, err)
 	require.Equal(t, []*types.Snapshot{
-		{Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
+		{
+			Height: 3, Format: 2, Chunks: 3, Hash: hash([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{3, 2, 0}, {3, 2, 1}, {3, 2, 2}})},
 		},
-		{Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
+		{
+			Height: 2, Format: 2, Chunks: 3, Hash: hash([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 2, 0}, {2, 2, 1}, {2, 2, 2}})},
 		},
-		{Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
+		{
+			Height: 2, Format: 1, Chunks: 2, Hash: hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 			Metadata: types.Metadata{ChunkHashes: checksums([][]byte{{2, 1, 0}, {2, 1, 1}})},
 		},
 	}, snapshots)
@@ -314,7 +317,7 @@ func TestStore_Save(t *testing.T) {
 
 	ch := make(chan io.ReadCloser, 2)
 	ch <- pr
-	ch <- ioutil.NopCloser(bytes.NewBuffer([]byte{0xff}))
+	ch <- io.NopCloser(bytes.NewBuffer([]byte{0xff}))
 	close(ch)
 
 	_, err = store.Save(6, 1, ch)
@@ -325,7 +328,10 @@ func TestStore_Save(t *testing.T) {
 	// Saving a snapshot should error if a snapshot is already in progress for the same height,
 	// regardless of format. However, a different height should succeed.
 	ch = make(chan io.ReadCloser)
-	go store.Save(7, 1, ch)
+	go func() {
+		_, err := store.Save(7, 1, ch)
+		require.NoError(t, err)
+	}()
 	time.Sleep(10 * time.Millisecond)
 	_, err = store.Save(7, 2, makeChunks(nil))
 	require.Error(t, err)

@@ -59,16 +59,15 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	balances := sdk.NewCoins()
 	accountStore := k.getAccountStore(sdkCtx, addr)
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
-		var result sdk.Coin
-		err := k.cdc.Unmarshal(value, &result)
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
+		denom := string(key)
+		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
 		if err != nil {
 			return err
 		}
-		balances = append(balances, result)
+		balances = append(balances, balance)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
@@ -168,7 +167,6 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 		metadatas = append(metadatas, metadata)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -200,6 +198,7 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 		Metadata: metadata,
 	}, nil
 }
+
 
 // TotalDeflation implements the Query/TotalDeflation gRPC method
 func (k BaseKeeper) TotalDeflation(ctx context.Context, req *types.QueryTotalDeflationRequest) (*types.QueryTotalDeflationResponse, error) {

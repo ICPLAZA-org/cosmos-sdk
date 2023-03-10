@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -24,7 +25,7 @@ func (s *storeTestSuite) SetupSuite() {
 }
 
 func (s *storeTestSuite) TestPrefixEndBytes() {
-	var testCases = []struct {
+	testCases := []struct {
 		prefix   []byte
 		expected []byte
 	}{
@@ -44,10 +45,10 @@ func (s *storeTestSuite) TestPrefixEndBytes() {
 }
 
 func (s *storeTestSuite) TestCommitID() {
-	var empty sdk.CommitID
+	var empty types.CommitID
 	s.Require().True(empty.IsZero())
 
-	var nonempty = sdk.CommitID{
+	nonempty := types.CommitID{
 		Version: 1,
 		Hash:    []byte("testhash"),
 	}
@@ -55,7 +56,7 @@ func (s *storeTestSuite) TestCommitID() {
 }
 
 func (s *storeTestSuite) TestNewTransientStoreKeys() {
-	s.Require().Equal(map[string]*sdk.TransientStoreKey{}, sdk.NewTransientStoreKeys())
+	s.Require().Equal(map[string]*types.TransientStoreKey{}, sdk.NewTransientStoreKeys())
 	s.Require().Equal(1, len(sdk.NewTransientStoreKeys("one")))
 }
 
@@ -108,7 +109,7 @@ func (s *storeTestSuite) TestDiffKVStores() {
 
 func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 	db := dbm.NewMemDB()
-	ms := rootmulti.NewStore(db)
+	ms := rootmulti.NewStore(db, log.NewNopLogger())
 
 	key1 := types.NewKVStoreKey("store1")
 	key2 := types.NewKVStoreKey("store2")

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -57,7 +56,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -121,18 +120,22 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
 			}
-
-			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, key.GetAddress(), coins, cdc)
+			addr, err := key.GetAddress()
+			if err != nil {
+				return err
+			}
+			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
 			txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
-			if err != nil {
-				return errors.Wrap(err, "error creating tx builder")
-			}
 
-			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
+			pub, err := key.GetAddress()
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(pub)
 
 			// The following line comes from a discrepancy between the `gentx`
 			// and `create-validator` commands:
@@ -155,7 +158,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 
 			if key.GetType() == keyring.TypeOffline || key.GetType() == keyring.TypeMulti {
 				cmd.PrintErrln("Offline key passed in. Use `tx sign` command to sign.")
-				return authclient.PrintUnsignedStdTx(txBldr, clientCtx, []sdk.Msg{msg})
+				return txBldr.PrintUnsignedTx(clientCtx, msg)
 			}
 
 			// write the unsigned transaction to the buffer
@@ -166,7 +169,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return err
 			}
 
-			if err = authclient.PrintUnsignedStdTx(txBldr, clientCtx, []sdk.Msg{msg}); err != nil {
+			if err = txBldr.PrintUnsignedTx(clientCtx, msg); err != nil {
 				return errors.Wrap(err, "failed to print unsigned std tx")
 			}
 
@@ -215,7 +218,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 
 func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	writePath := filepath.Join(rootDir, "config", "gentx")
-	if err := tmos.EnsureDir(writePath, 0700); err != nil {
+	if err := tmos.EnsureDir(writePath, 0o700); err != nil {
 		return "", err
 	}
 
@@ -223,7 +226,7 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 }
 
 func readUnsignedGenTxFile(clientCtx client.Context, r io.Reader) (sdk.Tx, error) {
-	bz, err := ioutil.ReadAll(r)
+	bz, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +240,7 @@ func readUnsignedGenTxFile(clientCtx client.Context, r io.Reader) (sdk.Tx, error
 }
 
 func writeSignedGenTx(clientCtx client.Context, outputDocument string, tx sdk.Tx) error {
-	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	outputFile, err := os.OpenFile(outputDocument, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}

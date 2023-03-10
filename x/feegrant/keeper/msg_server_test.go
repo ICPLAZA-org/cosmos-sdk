@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
@@ -219,5 +218,4 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			}
 		})
 	}
-
 }

@@ -6,6 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
@@ -188,7 +189,7 @@ func (m *QueryValidatorRequest) GetValidatorAddr() string {
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 type QueryValidatorResponse struct {
-	// validator defines the the validator info.
+	// validator defines the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 
@@ -1085,7 +1086,7 @@ var xxx_messageInfo_QueryDelegatorValidatorRequest proto.InternalMessageInfo
 // QueryDelegatorValidatorResponse response type for the
 // Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorResponse struct {
-	// validator defines the the validator info.
+	// validator defines the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 

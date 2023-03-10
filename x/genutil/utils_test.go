@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/privval"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/config"
 )
@@ -24,7 +27,7 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 
 	cfg := config.TestConfig()
 	cfg.RootDir = t.TempDir()
-	require.NoError(t, os.MkdirAll(filepath.Join(cfg.RootDir, "config"), 0755))
+	require.NoError(t, os.MkdirAll(filepath.Join(cfg.RootDir, "config"), 0o755))
 
 	tests := []struct {
 		name     string
@@ -57,6 +60,13 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+
+				if tt.mnemonic != "" {
+					actualPVFile := privval.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+					expectedPrivateKey := tmed25519.GenPrivKeyFromSecret([]byte(tt.mnemonic))
+					expectedFile := privval.NewFilePV(expectedPrivateKey, cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+					require.Equal(t, expectedFile, actualPVFile)
+				}
 			}
 		})
 	}

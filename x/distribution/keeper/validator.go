@@ -12,12 +12,10 @@ import (
 // initialize rewards for a new validator
 func (k Keeper) initializeValidator(ctx sdk.Context, val stakingtypes.ValidatorI) {
 	// set initial historical rewards (period 0) with reference count of 1
-	// k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
-	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, sdk.DecCoins{}, 1))
+	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
 
 	// set current rewards (starting at period 1)
-	// k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
-	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, sdk.DecCoins{}, 1))
+	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
 
 	// set accumulated commission
 	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
@@ -32,48 +30,35 @@ func (k Keeper) IncrementValidatorPeriod(ctx sdk.Context, val stakingtypes.Valid
 	rewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 
 	// calculate current ratio
-	// var current sdk.DecCoins
-	var currentRewards, recommandersRewards sdk.DecCoins
+	var current sdk.DecCoins
 	if val.GetTokens().IsZero() {
 
 		// can't calculate ratio for zero-token validators
 		// ergo we instead add to the community pool
 		feePool := k.GetFeePool(ctx)
 		outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
-		// feePool.CommunityPool = feePool.CommunityPool.Add(rewards.Rewards...)
-		feePool.CommunityPool = feePool.CommunityPool.Add(rewards.Rewards...).Add(rewards.RecommandersRewards...)
-		// outstanding.Rewards = outstanding.GetRewards().Sub(rewards.Rewards)
-		outstanding.Rewards = outstanding.GetRewards().Sub(rewards.Rewards).Sub(rewards.RecommandersRewards)
+		feePool.CommunityPool = feePool.CommunityPool.Add(rewards.Rewards...)
+		outstanding.Rewards = outstanding.GetRewards().Sub(rewards.Rewards)
 		k.SetFeePool(ctx, feePool)
 		k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)
 
-		// current = sdk.DecCoins{}
-		currentRewards = sdk.DecCoins{}
-		recommandersRewards = sdk.DecCoins{}
+		current = sdk.DecCoins{}
 	} else {
 		// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-		// current = rewards.Rewards.QuoDecTruncate(val.GetTokens().ToDec())
-		currentRewards = rewards.Rewards.QuoDecTruncate(val.GetTokens().ToDec())
-		recommandersRewards = rewards.RecommandersRewards.QuoDecTruncate(val.GetTokens().ToDec())
+		current = rewards.Rewards.QuoDecTruncate(sdk.NewDecFromInt(val.GetTokens()))
 	}
 
 	// fetch historical rewards for last period
-	// historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1).CumulativeRewardRatio
-	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1)
-	rewardHistorical := historical.CumulativeRewardRatio
-	recommandersRewardHistorical := historical.CumulativeRecommandersRewardRatio
+	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1).CumulativeRewardRatio
 
 	// decrement reference count
 	k.decrementReferenceCount(ctx, val.GetOperator(), rewards.Period-1)
 
 	// set new historical rewards with reference count of 1
-	// k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(historical.Add(current...), 1))
-	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, 
-		types.NewValidatorHistoricalRewards(rewardHistorical.Add(currentRewards...), recommandersRewardHistorical.Add(recommandersRewards...), 1))
+	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(historical.Add(current...), 1))
 
 	// set current rewards, incrementing period by 1
-	// k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
-	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, sdk.DecCoins{}, rewards.Period+1))
+	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
 
 	return rewards.Period
 }

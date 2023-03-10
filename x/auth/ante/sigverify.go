@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -136,6 +136,10 @@ type SigGasConsumeDecorator struct {
 }
 
 func NewSigGasConsumeDecorator(ak AccountKeeper, sigGasConsumer SignatureVerificationGasConsumer) SigGasConsumeDecorator {
+	if sigGasConsumer == nil {
+		sigGasConsumer = DefaultSigVerificationGasConsumer
+	}
+
 	return SigGasConsumeDecorator{
 		ak:             ak,
 		sigGasConsumer: sigGasConsumer,
@@ -229,10 +233,6 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	if ctx.IsReCheckTx() {
-		return next(ctx, tx, simulate)
-	}
-
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -264,19 +264,12 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
-		// When using Amino StdSignatures, we actually don't have the Sequence in
-		// the SignatureV2 struct (it's only in the SignDoc). In this case, we
-		// cannot check sequence directly, and must do it via signature
-		// verification (in the VerifySignature call below).
 		// Check account sequence number.
-		onlyAminoSigners := OnlyLegacyAminoSigners(sig.Data)
-		if !onlyAminoSigners {
-			if sig.Sequence != acc.GetSequence() {
-				return ctx, sdkerrors.Wrapf(
-					sdkerrors.ErrWrongSequence,
-					"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-				)
-			}
+		if sig.Sequence != acc.GetSequence() {
+			return ctx, sdkerrors.Wrapf(
+				sdkerrors.ErrWrongSequence,
+				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+			)
 		}
 
 		// retrieve signer data
@@ -287,18 +280,19 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			accNum = acc.GetAccountNumber()
 		}
 		signerData := authsigning.SignerData{
+			Address:       acc.GetAddress().String(),
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),
+			PubKey:        pubKey,
 		}
 
 		// no need to verify signatures on recheck tx
-		if !simulate {
+		if !simulate && !ctx.IsReCheckTx() {
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
 				var errMsg string
-				// if OnlyLegacyAminoSigners(sig.Data) {
-				if onlyAminoSigners {
+				if OnlyLegacyAminoSigners(sig.Data) {
 					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
 					// and therefore communicate sequence number as a potential cause of error.
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
@@ -316,8 +310,8 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // IncrementSequenceDecorator handles incrementing sequences of all signers.
 // Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
-// there is no need to execute IncrementSequenceDecorator on RecheckTX since
-// CheckTx would already bump the sequence number.
+// there is need to execute IncrementSequenceDecorator on RecheckTx since
+// BaseApp.Commit() will set the check state based on the latest header.
 //
 // NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
 // sequential txs orginating from the same account cannot be handled correctly in
@@ -431,7 +425,6 @@ func ConsumeMultisignatureVerificationGas(
 	meter sdk.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
-
 	size := sig.BitArray.Count()
 	sigIndex := 0
 

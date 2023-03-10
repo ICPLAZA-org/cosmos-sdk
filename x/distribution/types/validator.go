@@ -8,19 +8,17 @@ import (
 )
 
 // create a new ValidatorHistoricalRewards
-func NewValidatorHistoricalRewards(cumulativeRewardRatio, cumulativeRecommandersRewardRatio sdk.DecCoins, referenceCount uint32) ValidatorHistoricalRewards {
+func NewValidatorHistoricalRewards(cumulativeRewardRatio sdk.DecCoins, referenceCount uint32) ValidatorHistoricalRewards {
 	return ValidatorHistoricalRewards{
 		CumulativeRewardRatio: cumulativeRewardRatio,
-		CumulativeRecommandersRewardRatio: cumulativeRecommandersRewardRatio,
 		ReferenceCount:        referenceCount,
 	}
 }
 
 // create a new ValidatorCurrentRewards
-func NewValidatorCurrentRewards(rewards, recommandersRewards sdk.DecCoins, period uint64) ValidatorCurrentRewards {
+func NewValidatorCurrentRewards(rewards sdk.DecCoins, period uint64) ValidatorCurrentRewards {
 	return ValidatorCurrentRewards{
 		Rewards: rewards,
-		RecommandersRewards: recommandersRewards,
 		Period:  period,
 	}
 }

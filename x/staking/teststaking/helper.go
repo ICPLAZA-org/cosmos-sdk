@@ -13,7 +13,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Helper is a structure which wraps the staking handler
+// Helper is a structure which wraps the staking message server
 // and provides methods useful in tests
 type Helper struct {
 	t *testing.T
