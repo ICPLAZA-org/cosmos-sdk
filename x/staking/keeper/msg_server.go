@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-
 	"github.com/armon/go-metrics"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -235,6 +234,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 
 // Delegate defines a method for performing a delegation of coins from a delegator to a validator
 func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if valErr != nil {
@@ -279,6 +279,9 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 			)
 		}()
 	}
+
+
+
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

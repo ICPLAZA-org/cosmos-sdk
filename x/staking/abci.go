@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -23,6 +22,6 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 // Called every block, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
-	fmt.Println("============> BlockValidatorUpdates")
+
 	return k.BlockValidatorUpdates(ctx)
 }
