@@ -16,6 +16,17 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 	return ak.NewAccount(ctx, acc)
 }
 
+func (ak AccountKeeper) NewBaseAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
+	acc := types.ProtoBaseAccount()
+	err := acc.SetAddress(addr)
+	if err != nil {
+		panic(err)
+	}
+
+	return ak.NewAccount(ctx, acc)
+}
+
+
 // NewAccount sets the next account number to a given account interface
 func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.AccountI {
 	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {

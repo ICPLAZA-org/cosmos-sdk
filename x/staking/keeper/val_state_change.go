@@ -15,6 +15,8 @@ import (
 // BlockValidatorUpdates calculates the ValidatorUpdates for the current block
 // Called in each EndBlock
 func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
+	fmt.Println("Keeper) BlockValidatorUpdates")
+	fmt.Println("start=========>")
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
@@ -28,6 +30,8 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println(validatorUpdates)
 
 	// unbond all mature validators from the unbonding queue
 	k.UnbondAllMatureValidators(ctx)
@@ -89,7 +93,8 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 			),
 		)
 	}
-
+fmt.Println(validatorUpdates)
+fmt.Println("<========end")
 	return validatorUpdates
 }
 
@@ -182,6 +187,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		totalPower = totalPower.Add(sdk.NewInt(newPower))
 	}
 
+	fmt.Println(updates)
+
 	noLongerBonded, err := sortNoLongerBonded(last)
 	if err != nil {
 		return nil, err
@@ -217,6 +224,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	if len(updates) > 0 {
 		k.SetLastTotalPower(ctx, totalPower)
 	}
+
+	fmt.Println(updates)
 
 	return updates, err
 }

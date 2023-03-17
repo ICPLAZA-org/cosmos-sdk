@@ -4,7 +4,7 @@ info:
   description: A REST interface for state queries
   version: 1.0.0
 paths:
-  /cosmos/auth/v1beta1/accounts:
+  /icplaza/auth/v1beta1/accounts:
     get:
       summary: Accounts returns all the existing accounts
       description: 'Since: cosmos-sdk 0.43'
@@ -466,7 +466,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/auth/v1beta1/accounts/{address}:
+  '/icplaza/auth/v1beta1/accounts/{address}':
     get:
       summary: Account returns account details based on address.
       operationId: Account
@@ -847,7 +847,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/auth/v1beta1/address_by_id/{id}:
+  '/icplaza/auth/v1beta1/address_by_id/{id}':
     get:
       summary: AccountAddressByID returns account address based on account number.
       description: 'Since: cosmos-sdk 0.46.2'
@@ -1065,7 +1065,7 @@ paths:
           format: int64
       tags:
         - Query
-  /cosmos/auth/v1beta1/bech32:
+  /icplaza/auth/v1beta1/bech32:
     get:
       summary: Bech32Prefix queries bech32Prefix
       description: 'Since: cosmos-sdk 0.46'
@@ -1275,7 +1275,7 @@ paths:
                         }
       tags:
         - Query
-  /cosmos/auth/v1beta1/bech32/{address_bytes}:
+  '/icplaza/auth/v1beta1/bech32/{address_bytes}':
     get:
       summary: AddressBytesToString converts Account Address bytes to string
       description: 'Since: cosmos-sdk 0.46'
@@ -1491,7 +1491,7 @@ paths:
           format: byte
       tags:
         - Query
-  /cosmos/auth/v1beta1/bech32/{address_string}:
+  '/icplaza/auth/v1beta1/bech32/{address_string}':
     get:
       summary: AddressStringToBytes converts Address string to bytes
       description: 'Since: cosmos-sdk 0.46'
@@ -1707,7 +1707,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/auth/v1beta1/module_accounts:
+  /icplaza/auth/v1beta1/module_accounts:
     get:
       summary: ModuleAccounts returns all the existing module accounts.
       description: 'Since: cosmos-sdk 0.46'
@@ -2092,7 +2092,7 @@ paths:
                         }
       tags:
         - Query
-  /cosmos/auth/v1beta1/module_accounts/{name}:
+  '/icplaza/auth/v1beta1/module_accounts/{name}':
     get:
       summary: ModuleAccountByName returns the module account info by module name
       operationId: ModuleAccountByName
@@ -2472,7 +2472,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/auth/v1beta1/params:
+  /icplaza/auth/v1beta1/params:
     get:
       summary: Params queries all parameters.
       operationId: AuthParams
@@ -2695,7 +2695,7 @@ paths:
                         }
       tags:
         - Query
-  /cosmos/bank/v1beta1/balances/{address}:
+  '/cosmos/bank/v1beta1/balances/{address}':
     get:
       summary: AllBalances queries the balance of all coins for a single account.
       operationId: AllBalances
@@ -2833,7 +2833,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/balances/{address}/by_denom:
+  '/cosmos/bank/v1beta1/balances/{address}/by_denom':
     get:
       summary: Balance queries the balance of a single coin for a single account.
       operationId: Balance
@@ -2894,170 +2894,6 @@ paths:
           in: query
           required: false
           type: string
-      tags:
-        - Query
-  /cosmos/bank/v1beta1/denom_owners/{denom}:
-    get:
-      summary: >-
-        DenomOwners queries for all account addresses that own a particular
-        token
-
-        denomination.
-      description: 'Since: cosmos-sdk 0.46'
-      operationId: DenomOwners
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              denom_owners:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    address:
-                      type: string
-                      description: >-
-                        address defines the address that owns a particular
-                        denomination.
-                    balance:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                  description: >-
-                    DenomOwner defines structure representing an account that
-                    owns or holds a
-
-                    particular denominated token. It contains the account
-                    address and account
-
-                    balance of the denominated token.
-
-
-                    Since: cosmos-sdk 0.46
-              pagination:
-                description: pagination defines the pagination in the response.
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    description: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-            description: >-
-              QueryDenomOwnersResponse defines the RPC response of a DenomOwners
-              RPC query.
-
-
-              Since: cosmos-sdk 0.46
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    type_url:
-                      type: string
-                    value:
-                      type: string
-                      format: byte
-      parameters:
-        - name: denom
-          description: >-
-            denom defines the coin denomination to query all account holders
-            for.
-          in: path
-          required: true
-          type: string
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   /cosmos/bank/v1beta1/denoms_metadata:
@@ -3271,7 +3107,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/denoms_metadata/{denom}:
+  '/cosmos/bank/v1beta1/denoms_metadata/{denom}':
     get:
       summary: DenomsMetadata queries the client metadata of a given coin denomination.
       operationId: DenomMetadata
@@ -3462,7 +3298,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /cosmos/bank/v1beta1/spendable_balances/{address}:
+  '/cosmos/bank/v1beta1/spendable_balances/{address}':
     get:
       summary: |-
         SpendableBalances queries the spenable balance of all coins for a single
@@ -3797,6 +3633,200 @@ paths:
           description: denom is the coin denom to query balances for.
           in: query
           required: false
+          type: string
+      tags:
+        - Query
+  /icplaza/bank/v1beta1/deflation:
+    get:
+      summary: TotalDeflations queries the total deflations of all coins.
+      operationId: TotalDeflation
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              deflation:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+                title: deflation is the deflation of the coins
+              pagination:
+                description: |-
+                  pagination defines the pagination in the response.
+
+                  Since: cosmos-sdk 0.43
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            title: >-
+              QueryTotalDeflationResponse is the response type for the
+              Query/TotalDeflation RPC
+
+              method
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/icplaza/bank/v1beta1/deflation/{denom}':
+    get:
+      summary: DeflationOf queries the deflation of a single coin.
+      operationId: DeflationOf
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            description: >-
+              QueryDeflationOfResponse is the response type for the
+              Query/DeflationOf RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: denom
+          description: denom is the coin denom to query balances for.
+          in: path
+          required: true
           type: string
       tags:
         - Query
@@ -5408,7 +5438,7 @@ paths:
                         }
       tags:
         - Service
-  /cosmos/base/tendermint/v1beta1/blocks/{height}:
+  '/cosmos/base/tendermint/v1beta1/blocks/{height}':
     get:
       summary: GetBlockByHeight queries block for given height.
       operationId: GetBlockByHeight
@@ -7680,7 +7710,7 @@ paths:
           type: boolean
       tags:
         - Service
-  /cosmos/base/tendermint/v1beta1/validatorsets/{height}:
+  '/cosmos/base/tendermint/v1beta1/validatorsets/{height}':
     get:
       summary: GetValidatorSetByHeight queries validator-set at a given height.
       operationId: GetValidatorSetByHeight
@@ -8217,7 +8247,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards':
     get:
       summary: |-
         DelegationTotalRewards queries the total rewards accrued by a each
@@ -8310,7 +8340,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}':
     get:
       summary: DelegationRewards queries the total rewards accrued by a delegation.
       operationId: DelegationRewards
@@ -8377,7 +8407,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/validators:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators':
     get:
       summary: DelegatorValidators queries the validators of a delegator.
       operationId: DelegatorValidators
@@ -8427,7 +8457,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address':
     get:
       summary: DelegatorWithdrawAddress queries withdraw address of a delegator.
       operationId: DelegatorWithdrawAddress
@@ -8495,6 +8525,16 @@ paths:
                     type: string
                   withdraw_addr_enabled:
                     type: boolean
+                  delayed_reward_proportion:
+                    type: string
+                  min_delayed_reward_period:
+                    type: string
+                    format: int64
+                  max_delayed_reward_interval:
+                    type: string
+                    format: int64
+                  delayed_reward_unit:
+                    type: string
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -8522,7 +8562,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/commission:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/commission':
     get:
       summary: ValidatorCommission queries accumulated commission for a validator.
       operationId: ValidatorCommission
@@ -8537,6 +8577,24 @@ paths:
                 type: object
                 properties:
                   commission:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
+
+
+                        NOTE: The amount field is an Dec which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  team_commission:
                     type: array
                     items:
                       type: object
@@ -8587,7 +8645,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards':
     get:
       summary: ValidatorOutstandingRewards queries rewards of a validator address.
       operationId: ValidatorOutstandingRewards
@@ -8659,7 +8717,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/slashes:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/slashes':
     get:
       summary: ValidatorSlashes queries slash events of a validator.
       operationId: ValidatorSlashes
@@ -9274,7 +9332,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/evidence/v1beta1/evidence/{evidence_hash}:
+  '/cosmos/evidence/v1beta1/evidence/{evidence_hash}':
     get:
       summary: Evidence queries evidence based on evidence hash.
       operationId: Evidence
@@ -9656,7 +9714,7 @@ paths:
           format: byte
       tags:
         - Query
-  /cosmos/gov/v1beta1/params/{params_type}:
+  '/cosmos/gov/v1beta1/params/{params_type}':
     get:
       summary: Params queries all parameters of the gov module.
       operationId: GovParams
@@ -10509,7 +10567,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}':
     get:
       summary: Proposal queries proposal details based on ProposalID.
       operationId: Proposal
@@ -10977,7 +11035,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits':
     get:
       summary: Deposits queries all deposits of a single proposal.
       operationId: Deposits
@@ -11296,7 +11354,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}':
     get:
       summary: >-
         Deposit queries single deposit information based proposalID,
@@ -11544,7 +11602,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/tally:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/tally':
     get:
       summary: TallyResult queries the tally of a proposal vote.
       operationId: TallyResult
@@ -11767,7 +11825,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/votes:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes':
     get:
       summary: Votes queries votes of a given proposal.
       operationId: Votes
@@ -12119,9 +12177,9 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}':
     get:
-      summary: Vote queries voted information based on proposalID, voterAddr.
+      summary: 'Vote queries voted information based on proposalID, voterAddr.'
       operationId: Vote
       responses:
         '200':
@@ -12398,7 +12456,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/gov/v1/params/{params_type}:
+  '/cosmos/gov/v1/params/{params_type}':
     get:
       summary: Params queries all parameters of the gov module.
       operationId: GovV1Params
@@ -13255,7 +13313,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1/proposals/{proposal_id}:
+  '/cosmos/gov/v1/proposals/{proposal_id}':
     get:
       summary: Proposal queries proposal details based on ProposalID.
       operationId: GovV1Proposal
@@ -13732,7 +13790,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/gov/v1/proposals/{proposal_id}/deposits:
+  '/cosmos/gov/v1/proposals/{proposal_id}/deposits':
     get:
       summary: Deposits queries all deposits of a single proposal.
       operationId: GovV1Deposit
@@ -14051,7 +14109,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}:
+  '/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}':
     get:
       summary: >-
         Deposit queries single deposit information based proposalID,
@@ -14299,7 +14357,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/gov/v1/proposals/{proposal_id}/tally:
+  '/cosmos/gov/v1/proposals/{proposal_id}/tally':
     get:
       summary: TallyResult queries the tally of a proposal vote.
       operationId: GovV1TallyResult
@@ -14522,7 +14580,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/gov/v1/proposals/{proposal_id}/votes:
+  '/cosmos/gov/v1/proposals/{proposal_id}/votes':
     get:
       summary: Votes queries votes of a given proposal.
       operationId: GovV1Votes
@@ -14857,9 +14915,9 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}:
+  '/cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}':
     get:
-      summary: Vote queries voted information based on proposalID, voterAddr.
+      summary: 'Vote queries voted information based on proposalID, voterAddr.'
       operationId: GovV1Vote
       responses:
         '200':
@@ -15623,7 +15681,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/slashing/v1beta1/signing_infos/{cons_address}:
+  '/cosmos/slashing/v1beta1/signing_infos/{cons_address}':
     get:
       summary: SigningInfo queries the signing info of given cons address
       operationId: SigningInfo
@@ -15721,7 +15779,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegations/{delegator_addr}:
+  '/icplaza/staking/v1beta1/delegations/{delegator_addr}':
     get:
       summary: >-
         DelegatorDelegations queries all delegations of a given delegator
@@ -15754,6 +15812,11 @@ paths:
                         shares:
                           type: string
                           description: shares define the delegation shares received.
+                        recommander_address:
+                          type: string
+                          description: >-
+                            recommander_address is the bech32-encoded address of
+                            the recommander.
                       description: >-
                         Delegation represents the bond with tokens held by an
                         account. It is
@@ -16061,7 +16124,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations:
+  '/icplaza/staking/v1beta1/delegators/{delegator_addr}/redelegations':
     get:
       summary: Redelegations queries redelegations of given address.
       operationId: Redelegations
@@ -16471,7 +16534,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations:
+  '/icplaza/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations':
     get:
       summary: >-
         DelegatorUnbondingDelegations queries all unbonding delegations of a
@@ -16813,7 +16876,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/validators:
+  '/icplaza/staking/v1beta1/delegators/{delegator_addr}/validators':
     get:
       summary: |-
         DelegatorValidators queries all validators info for given delegator
@@ -17114,9 +17177,53 @@ paths:
                       description: >-
                         min_self_delegation is the validator's self declared
                         minimum self delegation.
-
-
-                        Since: cosmos-sdk 0.46
+                    reallocated_commission_rule:
+                      description: >-
+                        reallocated_commission_rule is all the rule of
+                        reallocated commission.
+                      type: object
+                      properties:
+                        validator_rate:
+                          type: string
+                          description: >-
+                            validator_rate is the commission rate charged to
+                            validator, as a fraction.
+                        recommanders_rate:
+                          type: string
+                          description: >-
+                            recommanders_rate is the commission rate charged to
+                            validator, as a fraction.
+                        incentive_depth:
+                          type: integer
+                          format: int64
+                        recommander_class_rates:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              index:
+                                type: integer
+                                format: int64
+                              rate:
+                                type: string
+                            title: RecommanderClassRate is the ratio of a recommander
+                        update_time:
+                          type: string
+                          format: date-time
+                          description: >-
+                            update_time is the last time the commission rate was
+                            changed.
+                      title: ReallocatedCommissionRule is reallocated commission rule
+                    incentive_team_address:
+                      type: string
+                      description: >-
+                        incentive_team_address define the address of team to
+                        receive reward.
+                    delegators:
+                      type: string
+                      description: >-
+                        delegators define the delegator number (incl.
+                        self-delegation).
                   description: >-
                     Validator defines a validator, together with the total
                     amount of the
@@ -17140,7 +17247,7 @@ paths:
                     bonded shares
 
                     multiplied by exchange rate.
-                description: validators defines the validators' info of a delegator.
+                description: validators defines the the validators' info of a delegator.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -17416,7 +17523,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}:
+  '/icplaza/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}':
     get:
       summary: |-
         DelegatorValidator queries validator info for given delegator validator
@@ -17712,9 +17819,53 @@ paths:
                     description: >-
                       min_self_delegation is the validator's self declared
                       minimum self delegation.
-
-
-                      Since: cosmos-sdk 0.46
+                  reallocated_commission_rule:
+                    description: >-
+                      reallocated_commission_rule is all the rule of reallocated
+                      commission.
+                    type: object
+                    properties:
+                      validator_rate:
+                        type: string
+                        description: >-
+                          validator_rate is the commission rate charged to
+                          validator, as a fraction.
+                      recommanders_rate:
+                        type: string
+                        description: >-
+                          recommanders_rate is the commission rate charged to
+                          validator, as a fraction.
+                      incentive_depth:
+                        type: integer
+                        format: int64
+                      recommander_class_rates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            index:
+                              type: integer
+                              format: int64
+                            rate:
+                              type: string
+                          title: RecommanderClassRate is the ratio of a recommander
+                      update_time:
+                        type: string
+                        format: date-time
+                        description: >-
+                          update_time is the last time the commission rate was
+                          changed.
+                    title: ReallocatedCommissionRule is reallocated commission rule
+                  incentive_team_address:
+                    type: string
+                    description: >-
+                      incentive_team_address define the address of team to
+                      receive reward.
+                  delegators:
+                    type: string
+                    description: >-
+                      delegators define the delegator number (incl.
+                      self-delegation).
                 description: >-
                   Validator defines a validator, together with the total amount
                   of the
@@ -17943,7 +18094,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/historical_info/{height}:
+  '/icplaza/staking/v1beta1/historical_info/{height}':
     get:
       summary: HistoricalInfo queries the historical info for given height.
       operationId: HistoricalInfo
@@ -18325,9 +18476,57 @@ paths:
                           description: >-
                             min_self_delegation is the validator's self declared
                             minimum self delegation.
-
-
-                            Since: cosmos-sdk 0.46
+                        reallocated_commission_rule:
+                          description: >-
+                            reallocated_commission_rule is all the rule of
+                            reallocated commission.
+                          type: object
+                          properties:
+                            validator_rate:
+                              type: string
+                              description: >-
+                                validator_rate is the commission rate charged to
+                                validator, as a fraction.
+                            recommanders_rate:
+                              type: string
+                              description: >-
+                                recommanders_rate is the commission rate charged
+                                to validator, as a fraction.
+                            incentive_depth:
+                              type: integer
+                              format: int64
+                            recommander_class_rates:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  index:
+                                    type: integer
+                                    format: int64
+                                  rate:
+                                    type: string
+                                title: >-
+                                  RecommanderClassRate is the ratio of a
+                                  recommander
+                            update_time:
+                              type: string
+                              format: date-time
+                              description: >-
+                                update_time is the last time the commission rate
+                                was changed.
+                          title: >-
+                            ReallocatedCommissionRule is reallocated commission
+                            rule
+                        incentive_team_address:
+                          type: string
+                          description: >-
+                            incentive_team_address define the address of team to
+                            receive reward.
+                        delegators:
+                          type: string
+                          description: >-
+                            delegators define the delegator number (incl.
+                            self-delegation).
                       description: >-
                         Validator defines a validator, together with the total
                         amount of the
@@ -18554,7 +18753,7 @@ paths:
           format: int64
       tags:
         - Query
-  /cosmos/staking/v1beta1/params:
+  /icplaza/staking/v1beta1/params:
     get:
       summary: Parameters queries the staking parameters.
       operationId: StakingParams
@@ -18590,11 +18789,12 @@ paths:
                   bond_denom:
                     type: string
                     description: bond_denom defines the bondable coin denomination.
-                  min_commission_rate:
-                    type: string
-                    title: >-
-                      min_commission_rate is the chain-wide minimum commission
-                      rate that a validator can charge their delegators
+                  max_incentive_depth:
+                    type: integer
+                    format: int64
+                    description: >-
+                      max_incentive_depth is the max depth of incentive to
+                      reallocate commission.
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -18789,7 +18989,7 @@ paths:
                         }
       tags:
         - Query
-  /cosmos/staking/v1beta1/pool:
+  /icplaza/staking/v1beta1/pool:
     get:
       summary: Pool queries the pool info.
       operationId: Pool
@@ -18999,7 +19199,7 @@ paths:
                         }
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators:
+  /icplaza/staking/v1beta1/validators:
     get:
       summary: Validators queries all validators that match the given status.
       operationId: Validators
@@ -19298,9 +19498,53 @@ paths:
                       description: >-
                         min_self_delegation is the validator's self declared
                         minimum self delegation.
-
-
-                        Since: cosmos-sdk 0.46
+                    reallocated_commission_rule:
+                      description: >-
+                        reallocated_commission_rule is all the rule of
+                        reallocated commission.
+                      type: object
+                      properties:
+                        validator_rate:
+                          type: string
+                          description: >-
+                            validator_rate is the commission rate charged to
+                            validator, as a fraction.
+                        recommanders_rate:
+                          type: string
+                          description: >-
+                            recommanders_rate is the commission rate charged to
+                            validator, as a fraction.
+                        incentive_depth:
+                          type: integer
+                          format: int64
+                        recommander_class_rates:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              index:
+                                type: integer
+                                format: int64
+                              rate:
+                                type: string
+                            title: RecommanderClassRate is the ratio of a recommander
+                        update_time:
+                          type: string
+                          format: date-time
+                          description: >-
+                            update_time is the last time the commission rate was
+                            changed.
+                      title: ReallocatedCommissionRule is reallocated commission rule
+                    incentive_team_address:
+                      type: string
+                      description: >-
+                        incentive_team_address define the address of team to
+                        receive reward.
+                    delegators:
+                      type: string
+                      description: >-
+                        delegators define the delegator number (incl.
+                        self-delegation).
                   description: >-
                     Validator defines a validator, together with the total
                     amount of the
@@ -19600,7 +19844,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}:
+  '/icplaza/staking/v1beta1/validators/{validator_addr}':
     get:
       summary: Validator queries validator info for given validator address.
       operationId: Validator
@@ -19894,9 +20138,53 @@ paths:
                     description: >-
                       min_self_delegation is the validator's self declared
                       minimum self delegation.
-
-
-                      Since: cosmos-sdk 0.46
+                  reallocated_commission_rule:
+                    description: >-
+                      reallocated_commission_rule is all the rule of reallocated
+                      commission.
+                    type: object
+                    properties:
+                      validator_rate:
+                        type: string
+                        description: >-
+                          validator_rate is the commission rate charged to
+                          validator, as a fraction.
+                      recommanders_rate:
+                        type: string
+                        description: >-
+                          recommanders_rate is the commission rate charged to
+                          validator, as a fraction.
+                      incentive_depth:
+                        type: integer
+                        format: int64
+                      recommander_class_rates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            index:
+                              type: integer
+                              format: int64
+                            rate:
+                              type: string
+                          title: RecommanderClassRate is the ratio of a recommander
+                      update_time:
+                        type: string
+                        format: date-time
+                        description: >-
+                          update_time is the last time the commission rate was
+                          changed.
+                    title: ReallocatedCommissionRule is reallocated commission rule
+                  incentive_team_address:
+                    type: string
+                    description: >-
+                      incentive_team_address define the address of team to
+                      receive reward.
+                  delegators:
+                    type: string
+                    description: >-
+                      delegators define the delegator number (incl.
+                      self-delegation).
                 description: >-
                   Validator defines a validator, together with the total amount
                   of the
@@ -20120,7 +20408,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations:
+  '/icplaza/staking/v1beta1/validators/{validator_addr}/delegations':
     get:
       summary: ValidatorDelegations queries delegate info for given validator.
       operationId: ValidatorDelegations
@@ -20151,6 +20439,11 @@ paths:
                         shares:
                           type: string
                           description: shares define the delegation shares received.
+                        recommander_address:
+                          type: string
+                          description: >-
+                            recommander_address is the bech32-encoded address of
+                            the recommander.
                       description: >-
                         Delegation represents the bond with tokens held by an
                         account. It is
@@ -20455,7 +20748,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}:
+  '/icplaza/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}':
     get:
       summary: Delegation queries delegate info for given validator delegator pair.
       operationId: Delegation
@@ -20484,6 +20777,11 @@ paths:
                       shares:
                         type: string
                         description: shares define the delegation shares received.
+                      recommander_address:
+                        type: string
+                        description: >-
+                          recommander_address is the bech32-encoded address of
+                          the recommander.
                     description: >-
                       Delegation represents the bond with tokens held by an
                       account. It is
@@ -20718,7 +21016,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation:
+  '/icplaza/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation':
     get:
       summary: |-
         UnbondingDelegation queries unbonding info for given validator delegator
@@ -20984,7 +21282,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations:
+  '/icplaza/staking/v1beta1/validators/{validator_addr}/unbonding_delegations':
     get:
       summary: >-
         ValidatorUnbondingDelegations queries unbonding delegations of a
@@ -22116,7 +22414,7 @@ paths:
                     description: Response code.
                   data:
                     type: string
-                    description: Result bytes, if any.
+                    description: 'Result bytes, if any.'
                   raw_log:
                     type: string
                     description: >-
@@ -22648,7 +22946,7 @@ paths:
               RPC method.
       tags:
         - Service
-  /cosmos/tx/v1beta1/txs/block/{height}:
+  '/cosmos/tx/v1beta1/txs/block/{height}':
     get:
       summary: GetBlockWithTxs fetches a block with decoded txs.
       description: 'Since: cosmos-sdk 0.45.2'
@@ -22912,7 +23210,7 @@ paths:
           type: boolean
       tags:
         - Service
-  /cosmos/tx/v1beta1/txs/{hash}:
+  '/cosmos/tx/v1beta1/txs/{hash}':
     get:
       summary: GetTx fetches a tx by hash.
       operationId: GetTx
@@ -23112,13 +23410,13 @@ paths:
                         }
       parameters:
         - name: hash
-          description: hash is the tx hash to query, encoded as a hex string.
+          description: 'hash is the tx hash to query, encoded as a hex string.'
           in: path
           required: true
           type: string
       tags:
         - Service
-  /cosmos/upgrade/v1beta1/applied_plan/{name}:
+  '/cosmos/upgrade/v1beta1/applied_plan/{name}':
     get:
       summary: AppliedPlan queries a previously applied upgrade plan by its name.
       operationId: AppliedPlan
@@ -24209,7 +24507,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}:
+  '/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}':
     get:
       summary: >-
         UpgradedConsensusState queries the consensus state that will serve
@@ -24441,7 +24739,7 @@ paths:
         - Query
   /cosmos/authz/v1beta1/grants:
     get:
-      summary: Returns list of `Authorization`, granted to the grantee by the granter.
+      summary: 'Returns list of `Authorization`, granted to the grantee by the granter.'
       operationId: Grants
       responses:
         '200':
@@ -24933,7 +25231,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/authz/v1beta1/grants/grantee/{grantee}:
+  '/cosmos/authz/v1beta1/grants/grantee/{grantee}':
     get:
       summary: GranteeGrants returns a list of `GrantAuthorization` by grantee.
       description: 'Since: cosmos-sdk 0.46'
@@ -25413,9 +25711,9 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/authz/v1beta1/grants/granter/{granter}:
+  '/cosmos/authz/v1beta1/grants/granter/{granter}':
     get:
-      summary: GranterGrants returns list of `GrantAuthorization`, granted by granter.
+      summary: 'GranterGrants returns list of `GrantAuthorization`, granted by granter.'
       description: 'Since: cosmos-sdk 0.46'
       operationId: GranterGrants
       responses:
@@ -25893,7 +26191,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}:
+  '/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}':
     get:
       summary: Allowance returns fee granted to the grantee by the granter.
       operationId: Allowance
@@ -26199,7 +26497,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/feegrant/v1beta1/allowances/{grantee}:
+  '/cosmos/feegrant/v1beta1/allowances/{grantee}':
     get:
       summary: Allowances returns all the grants for address.
       operationId: Allowances
@@ -26572,7 +26870,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/feegrant/v1beta1/issued/{granter}:
+  '/cosmos/feegrant/v1beta1/issued/{granter}':
     get:
       summary: AllowancesByGranter returns all the grants given by an address
       description: 'Since: cosmos-sdk 0.46'
@@ -26949,7 +27247,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/nft/v1beta1/balance/{owner}/{class_id}:
+  '/cosmos/nft/v1beta1/balance/{owner}/{class_id}':
     get:
       summary: >-
         Balance queries the number of NFTs of a given class owned by the owner,
@@ -27674,7 +27972,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/nft/v1beta1/classes/{class_id}:
+  '/cosmos/nft/v1beta1/classes/{class_id}':
     get:
       summary: Class queries an NFT class based on its id
       operationId: Class
@@ -28594,7 +28892,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/nft/v1beta1/nfts/{class_id}/{id}:
+  '/cosmos/nft/v1beta1/nfts/{class_id}/{id}':
     get:
       summary: NFT queries an NFT based on its class and id.
       operationId: NFT
@@ -28999,7 +29297,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/nft/v1beta1/owner/{class_id}/{id}:
+  '/cosmos/nft/v1beta1/owner/{class_id}/{id}':
     get:
       summary: >-
         Owner queries the owner of the NFT based on its class and id, same as
@@ -29216,7 +29514,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/nft/v1beta1/supply/{class_id}:
+  '/cosmos/nft/v1beta1/supply/{class_id}':
     get:
       summary: >-
         Supply queries the number of NFTs from the given class, same as
@@ -29430,7 +29728,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/group/v1/group_info/{group_id}:
+  '/cosmos/group/v1/group_info/{group_id}':
     get:
       summary: GroupInfo queries group info based on group id.
       operationId: GroupInfo
@@ -29679,7 +29977,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/group/v1/group_members/{group_id}:
+  '/cosmos/group/v1/group_members/{group_id}':
     get:
       summary: GroupMembers queries members of a group
       operationId: GroupMembers
@@ -30001,7 +30299,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/group/v1/group_policies_by_admin/{admin}:
+  '/cosmos/group/v1/group_policies_by_admin/{admin}':
     get:
       summary: GroupsByAdmin queries group policies by admin address.
       operationId: GroupPoliciesByAdmin
@@ -30503,7 +30801,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/group/v1/group_policies_by_group/{group_id}:
+  '/cosmos/group/v1/group_policies_by_group/{group_id}':
     get:
       summary: GroupPoliciesByGroup queries group policies by group id.
       operationId: GroupPoliciesByGroup
@@ -31006,7 +31304,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/group/v1/group_policy_info/{address}:
+  '/cosmos/group/v1/group_policy_info/{address}':
     get:
       summary: >-
         GroupPolicyInfo queries group policy info based on account address of
@@ -31428,7 +31726,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/group/v1/groups_by_admin/{admin}:
+  '/cosmos/group/v1/groups_by_admin/{admin}':
     get:
       summary: GroupsByAdmin queries groups by admin address.
       operationId: GroupsByAdmin
@@ -31758,7 +32056,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/group/v1/groups_by_member/{address}:
+  '/cosmos/group/v1/groups_by_member/{address}':
     get:
       summary: GroupsByMember queries groups by member address.
       operationId: GroupsByMember
@@ -32088,7 +32386,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/group/v1/proposal/{proposal_id}:
+  '/cosmos/group/v1/proposal/{proposal_id}':
     get:
       summary: Proposal queries a proposal based on proposal id.
       operationId: GroupProposal
@@ -32596,7 +32894,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/group/v1/proposals/{proposal_id}/tally:
+  '/cosmos/group/v1/proposals/{proposal_id}/tally':
     get:
       summary: >-
         TallyResult returns the tally result of a proposal. If the proposal is
@@ -32831,7 +33129,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/group/v1/proposals_by_group_policy/{address}:
+  '/cosmos/group/v1/proposals_by_group_policy/{address}':
     get:
       summary: >-
         ProposalsByGroupPolicy queries proposals based on account address of
@@ -33432,7 +33730,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/group/v1/vote_by_proposal_voter/{proposal_id}/{voter}:
+  '/cosmos/group/v1/vote_by_proposal_voter/{proposal_id}/{voter}':
     get:
       summary: VoteByProposalVoter queries a vote by proposal id and voter.
       operationId: VoteByProposalVoter
@@ -33678,7 +33976,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/group/v1/votes_by_proposal/{proposal_id}:
+  '/cosmos/group/v1/votes_by_proposal/{proposal_id}':
     get:
       summary: VotesByProposal queries a vote by proposal.
       operationId: VotesByProposal
@@ -33999,7 +34297,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/group/v1/votes_by_voter/{voter}:
+  '/cosmos/group/v1/votes_by_voter/{voter}':
     get:
       summary: VotesByVoter queries a vote by voter.
       operationId: VotesByVoter
@@ -35503,30 +35801,6 @@ definitions:
                   "@type": "type.googleapis.com/google.protobuf.Duration",
                   "value": "1.212s"
                 }
-  cosmos.bank.v1beta1.DenomOwner:
-    type: object
-    properties:
-      address:
-        type: string
-        description: address defines the address that owns a particular denomination.
-      balance:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-    description: |-
-      DenomOwner defines structure representing an account that owns or holds a
-      particular denominated token. It contains the account address and account
-      balance of the denominated token.
-
-      Since: cosmos-sdk 0.46
   cosmos.bank.v1beta1.DenomUnit:
     type: object
     properties:
@@ -35719,6 +35993,24 @@ definitions:
     description: >-
       QueryBalanceResponse is the response type for the Query/Balance RPC
       method.
+  cosmos.bank.v1beta1.QueryDeflationOfResponse:
+    type: object
+    properties:
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: >-
+      QueryDeflationOfResponse is the response type for the Query/DeflationOf
+      RPC method.
   cosmos.bank.v1beta1.QueryDenomMetadataResponse:
     type: object
     properties:
@@ -35811,68 +36103,6 @@ definitions:
       Query/DenomMetadata RPC
 
       method.
-  cosmos.bank.v1beta1.QueryDenomOwnersResponse:
-    type: object
-    properties:
-      denom_owners:
-        type: array
-        items:
-          type: object
-          properties:
-            address:
-              type: string
-              description: address defines the address that owns a particular denomination.
-            balance:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-          description: >-
-            DenomOwner defines structure representing an account that owns or
-            holds a
-
-            particular denominated token. It contains the account address and
-            account
-
-            balance of the denominated token.
-
-
-            Since: cosmos-sdk 0.46
-      pagination:
-        description: pagination defines the pagination in the response.
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            description: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-    description: >-
-      QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC
-      query.
-
-
-      Since: cosmos-sdk 0.46
   cosmos.bank.v1beta1.QueryDenomsMetadataResponse:
     type: object
     properties:
@@ -36078,6 +36308,51 @@ definitions:
     description: >-
       QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC
       method.
+  cosmos.bank.v1beta1.QueryTotalDeflationResponse:
+    type: object
+    properties:
+      deflation:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+        title: deflation is the deflation of the coins
+      pagination:
+        description: |-
+          pagination defines the pagination in the response.
+
+          Since: cosmos-sdk 0.43
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    title: >-
+      QueryTotalDeflationResponse is the response type for the
+      Query/TotalDeflation RPC
+
+      method
   cosmos.bank.v1beta1.QueryTotalSupplyResponse:
     type: object
     properties:
@@ -42232,6 +42507,16 @@ definitions:
         type: string
       withdraw_addr_enabled:
         type: boolean
+      delayed_reward_proportion:
+        type: string
+      min_delayed_reward_period:
+        type: string
+        format: int64
+      max_delayed_reward_interval:
+        type: string
+        format: int64
+      delayed_reward_unit:
+        type: string
     description: Params defines the set of params for the distribution module.
   cosmos.distribution.v1beta1.QueryCommunityPoolResponse:
     type: object
@@ -42362,6 +42647,16 @@ definitions:
             type: string
           withdraw_addr_enabled:
             type: boolean
+          delayed_reward_proportion:
+            type: string
+          min_delayed_reward_period:
+            type: string
+            format: int64
+          max_delayed_reward_interval:
+            type: string
+            format: int64
+          delayed_reward_unit:
+            type: string
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.distribution.v1beta1.QueryValidatorCommissionResponse:
     type: object
@@ -42371,6 +42666,24 @@ definitions:
         type: object
         properties:
           commission:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+          team_commission:
             type: array
             items:
               type: object
@@ -42468,6 +42781,20 @@ definitions:
     type: object
     properties:
       commission:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+      team_commission:
         type: array
         items:
           type: object
@@ -45807,7 +46134,7 @@ definitions:
         properties:
           rate:
             type: string
-            description: rate is the commission rate charged to delegators, as a fraction.
+            description: 'rate is the commission rate charged to delegators, as a fraction.'
           max_rate:
             type: string
             description: >-
@@ -45828,7 +46155,7 @@ definitions:
     properties:
       rate:
         type: string
-        description: rate is the commission rate charged to delegators, as a fraction.
+        description: 'rate is the commission rate charged to delegators, as a fraction.'
       max_rate:
         type: string
         description: >-
@@ -45856,6 +46183,9 @@ definitions:
       shares:
         type: string
         description: shares define the delegation shares received.
+      recommander_address:
+        type: string
+        description: recommander_address is the bech32-encoded address of the recommander.
     description: |-
       Delegation represents the bond with tokens held by an account. It is
       owned by one delegator, and is associated with the voting power of one
@@ -45875,6 +46205,11 @@ definitions:
           shares:
             type: string
             description: shares define the delegation shares received.
+          recommander_address:
+            type: string
+            description: >-
+              recommander_address is the bech32-encoded address of the
+              recommander.
         description: |-
           Delegation represents the bond with tokens held by an account. It is
           owned by one delegator, and is associated with the voting power of one
@@ -46267,9 +46602,51 @@ definitions:
               description: >-
                 min_self_delegation is the validator's self declared minimum
                 self delegation.
-
-
-                Since: cosmos-sdk 0.46
+            reallocated_commission_rule:
+              description: >-
+                reallocated_commission_rule is all the rule of reallocated
+                commission.
+              type: object
+              properties:
+                validator_rate:
+                  type: string
+                  description: >-
+                    validator_rate is the commission rate charged to validator,
+                    as a fraction.
+                recommanders_rate:
+                  type: string
+                  description: >-
+                    recommanders_rate is the commission rate charged to
+                    validator, as a fraction.
+                incentive_depth:
+                  type: integer
+                  format: int64
+                recommander_class_rates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      index:
+                        type: integer
+                        format: int64
+                      rate:
+                        type: string
+                    title: RecommanderClassRate is the ratio of a recommander
+                update_time:
+                  type: string
+                  format: date-time
+                  description: >-
+                    update_time is the last time the commission rate was
+                    changed.
+              title: ReallocatedCommissionRule is reallocated commission rule
+            incentive_team_address:
+              type: string
+              description: >-
+                incentive_team_address define the address of team to receive
+                reward.
+            delegators:
+              type: string
+              description: delegators define the delegator number (incl. self-delegation).
           description: >-
             Validator defines a validator, together with the total amount of the
 
@@ -46324,11 +46701,12 @@ definitions:
       bond_denom:
         type: string
         description: bond_denom defines the bondable coin denomination.
-      min_commission_rate:
-        type: string
-        title: >-
-          min_commission_rate is the chain-wide minimum commission rate that a
-          validator can charge their delegators
+      max_incentive_depth:
+        type: integer
+        format: int64
+        description: >-
+          max_incentive_depth is the max depth of incentive to reallocate
+          commission.
     description: Params defines the parameters for the staking module.
   cosmos.staking.v1beta1.Pool:
     type: object
@@ -46362,6 +46740,11 @@ definitions:
               shares:
                 type: string
                 description: shares define the delegation shares received.
+              recommander_address:
+                type: string
+                description: >-
+                  recommander_address is the bech32-encoded address of the
+                  recommander.
             description: >-
               Delegation represents the bond with tokens held by an account. It
               is
@@ -46418,6 +46801,11 @@ definitions:
                 shares:
                   type: string
                   description: shares define the delegation shares received.
+                recommander_address:
+                  type: string
+                  description: >-
+                    recommander_address is the bech32-encoded address of the
+                    recommander.
               description: >-
                 Delegation represents the bond with tokens held by an account.
                 It is
@@ -46809,9 +47197,49 @@ definitions:
             description: >-
               min_self_delegation is the validator's self declared minimum self
               delegation.
-
-
-              Since: cosmos-sdk 0.46
+          reallocated_commission_rule:
+            description: >-
+              reallocated_commission_rule is all the rule of reallocated
+              commission.
+            type: object
+            properties:
+              validator_rate:
+                type: string
+                description: >-
+                  validator_rate is the commission rate charged to validator, as
+                  a fraction.
+              recommanders_rate:
+                type: string
+                description: >-
+                  recommanders_rate is the commission rate charged to validator,
+                  as a fraction.
+              incentive_depth:
+                type: integer
+                format: int64
+              recommander_class_rates:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    index:
+                      type: integer
+                      format: int64
+                    rate:
+                      type: string
+                  title: RecommanderClassRate is the ratio of a recommander
+              update_time:
+                type: string
+                format: date-time
+                description: update_time is the last time the commission rate was changed.
+            title: ReallocatedCommissionRule is reallocated commission rule
+          incentive_team_address:
+            type: string
+            description: >-
+              incentive_team_address define the address of team to receive
+              reward.
+          delegators:
+            type: string
+            description: delegators define the delegator number (incl. self-delegation).
         description: >-
           Validator defines a validator, together with the total amount of the
 
@@ -47111,9 +47539,51 @@ definitions:
               description: >-
                 min_self_delegation is the validator's self declared minimum
                 self delegation.
-
-
-                Since: cosmos-sdk 0.46
+            reallocated_commission_rule:
+              description: >-
+                reallocated_commission_rule is all the rule of reallocated
+                commission.
+              type: object
+              properties:
+                validator_rate:
+                  type: string
+                  description: >-
+                    validator_rate is the commission rate charged to validator,
+                    as a fraction.
+                recommanders_rate:
+                  type: string
+                  description: >-
+                    recommanders_rate is the commission rate charged to
+                    validator, as a fraction.
+                incentive_depth:
+                  type: integer
+                  format: int64
+                recommander_class_rates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      index:
+                        type: integer
+                        format: int64
+                      rate:
+                        type: string
+                    title: RecommanderClassRate is the ratio of a recommander
+                update_time:
+                  type: string
+                  format: date-time
+                  description: >-
+                    update_time is the last time the commission rate was
+                    changed.
+              title: ReallocatedCommissionRule is reallocated commission rule
+            incentive_team_address:
+              type: string
+              description: >-
+                incentive_team_address define the address of team to receive
+                reward.
+            delegators:
+              type: string
+              description: delegators define the delegator number (incl. self-delegation).
           description: >-
             Validator defines a validator, together with the total amount of the
 
@@ -47135,7 +47605,7 @@ definitions:
             exchange rate. Voting power can be calculated as total bonded shares
 
             multiplied by exchange rate.
-        description: validators defines the validators' info of a delegator.
+        description: validators defines the the validators' info of a delegator.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -47520,9 +47990,53 @@ definitions:
                   description: >-
                     min_self_delegation is the validator's self declared minimum
                     self delegation.
-
-
-                    Since: cosmos-sdk 0.46
+                reallocated_commission_rule:
+                  description: >-
+                    reallocated_commission_rule is all the rule of reallocated
+                    commission.
+                  type: object
+                  properties:
+                    validator_rate:
+                      type: string
+                      description: >-
+                        validator_rate is the commission rate charged to
+                        validator, as a fraction.
+                    recommanders_rate:
+                      type: string
+                      description: >-
+                        recommanders_rate is the commission rate charged to
+                        validator, as a fraction.
+                    incentive_depth:
+                      type: integer
+                      format: int64
+                    recommander_class_rates:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          index:
+                            type: integer
+                            format: int64
+                          rate:
+                            type: string
+                        title: RecommanderClassRate is the ratio of a recommander
+                    update_time:
+                      type: string
+                      format: date-time
+                      description: >-
+                        update_time is the last time the commission rate was
+                        changed.
+                  title: ReallocatedCommissionRule is reallocated commission rule
+                incentive_team_address:
+                  type: string
+                  description: >-
+                    incentive_team_address define the address of team to receive
+                    reward.
+                delegators:
+                  type: string
+                  description: >-
+                    delegators define the delegator number (incl.
+                    self-delegation).
               description: >-
                 Validator defines a validator, together with the total amount of
                 the
@@ -47578,11 +48092,12 @@ definitions:
           bond_denom:
             type: string
             description: bond_denom defines the bondable coin denomination.
-          min_commission_rate:
-            type: string
-            title: >-
-              min_commission_rate is the chain-wide minimum commission rate that
-              a validator can charge their delegators
+          max_incentive_depth:
+            type: integer
+            format: int64
+            description: >-
+              max_incentive_depth is the max depth of incentive to reallocate
+              commission.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   cosmos.staking.v1beta1.QueryPoolResponse:
     type: object
@@ -47803,6 +48318,11 @@ definitions:
                 shares:
                   type: string
                   description: shares define the delegation shares received.
+                recommander_address:
+                  type: string
+                  description: >-
+                    recommander_address is the bech32-encoded address of the
+                    recommander.
               description: >-
                 Delegation represents the bond with tokens held by an account.
                 It is
@@ -48121,9 +48641,49 @@ definitions:
             description: >-
               min_self_delegation is the validator's self declared minimum self
               delegation.
-
-
-              Since: cosmos-sdk 0.46
+          reallocated_commission_rule:
+            description: >-
+              reallocated_commission_rule is all the rule of reallocated
+              commission.
+            type: object
+            properties:
+              validator_rate:
+                type: string
+                description: >-
+                  validator_rate is the commission rate charged to validator, as
+                  a fraction.
+              recommanders_rate:
+                type: string
+                description: >-
+                  recommanders_rate is the commission rate charged to validator,
+                  as a fraction.
+              incentive_depth:
+                type: integer
+                format: int64
+              recommander_class_rates:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    index:
+                      type: integer
+                      format: int64
+                    rate:
+                      type: string
+                  title: RecommanderClassRate is the ratio of a recommander
+              update_time:
+                type: string
+                format: date-time
+                description: update_time is the last time the commission rate was changed.
+            title: ReallocatedCommissionRule is reallocated commission rule
+          incentive_team_address:
+            type: string
+            description: >-
+              incentive_team_address define the address of team to receive
+              reward.
+          delegators:
+            type: string
+            description: delegators define the delegator number (incl. self-delegation).
         description: >-
           Validator defines a validator, together with the total amount of the
 
@@ -48493,9 +49053,51 @@ definitions:
               description: >-
                 min_self_delegation is the validator's self declared minimum
                 self delegation.
-
-
-                Since: cosmos-sdk 0.46
+            reallocated_commission_rule:
+              description: >-
+                reallocated_commission_rule is all the rule of reallocated
+                commission.
+              type: object
+              properties:
+                validator_rate:
+                  type: string
+                  description: >-
+                    validator_rate is the commission rate charged to validator,
+                    as a fraction.
+                recommanders_rate:
+                  type: string
+                  description: >-
+                    recommanders_rate is the commission rate charged to
+                    validator, as a fraction.
+                incentive_depth:
+                  type: integer
+                  format: int64
+                recommander_class_rates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      index:
+                        type: integer
+                        format: int64
+                      rate:
+                        type: string
+                    title: RecommanderClassRate is the ratio of a recommander
+                update_time:
+                  type: string
+                  format: date-time
+                  description: >-
+                    update_time is the last time the commission rate was
+                    changed.
+              title: ReallocatedCommissionRule is reallocated commission rule
+            incentive_team_address:
+              type: string
+              description: >-
+                incentive_team_address define the address of team to receive
+                reward.
+            delegators:
+              type: string
+              description: delegators define the delegator number (incl. self-delegation).
           description: >-
             Validator defines a validator, together with the total amount of the
 
@@ -48540,6 +49142,47 @@ definitions:
     title: >-
       QueryValidatorsResponse is response type for the Query/Validators RPC
       method
+  cosmos.staking.v1beta1.ReallocatedCommissionRule:
+    type: object
+    properties:
+      validator_rate:
+        type: string
+        description: >-
+          validator_rate is the commission rate charged to validator, as a
+          fraction.
+      recommanders_rate:
+        type: string
+        description: >-
+          recommanders_rate is the commission rate charged to validator, as a
+          fraction.
+      incentive_depth:
+        type: integer
+        format: int64
+      recommander_class_rates:
+        type: array
+        items:
+          type: object
+          properties:
+            index:
+              type: integer
+              format: int64
+            rate:
+              type: string
+          title: RecommanderClassRate is the ratio of a recommander
+      update_time:
+        type: string
+        format: date-time
+        description: update_time is the last time the commission rate was changed.
+    title: ReallocatedCommissionRule is reallocated commission rule
+  cosmos.staking.v1beta1.RecommanderClassRate:
+    type: object
+    properties:
+      index:
+        type: integer
+        format: int64
+      rate:
+        type: string
+    title: RecommanderClassRate is the ratio of a recommander
   cosmos.staking.v1beta1.Redelegation:
     type: object
     properties:
@@ -49071,9 +49714,45 @@ definitions:
         description: >-
           min_self_delegation is the validator's self declared minimum self
           delegation.
-
-
-          Since: cosmos-sdk 0.46
+      reallocated_commission_rule:
+        description: reallocated_commission_rule is all the rule of reallocated commission.
+        type: object
+        properties:
+          validator_rate:
+            type: string
+            description: >-
+              validator_rate is the commission rate charged to validator, as a
+              fraction.
+          recommanders_rate:
+            type: string
+            description: >-
+              recommanders_rate is the commission rate charged to validator, as
+              a fraction.
+          incentive_depth:
+            type: integer
+            format: int64
+          recommander_class_rates:
+            type: array
+            items:
+              type: object
+              properties:
+                index:
+                  type: integer
+                  format: int64
+                rate:
+                  type: string
+              title: RecommanderClassRate is the ratio of a recommander
+          update_time:
+            type: string
+            format: date-time
+            description: update_time is the last time the commission rate was changed.
+        title: ReallocatedCommissionRule is reallocated commission rule
+      incentive_team_address:
+        type: string
+        description: incentive_team_address define the address of team to receive reward.
+      delegators:
+        type: string
+        description: delegators define the delegator number (incl. self-delegation).
     description: >-
       Validator defines a validator, together with the total amount of the
 
@@ -49418,7 +50097,7 @@ definitions:
         description: Response code.
       data:
         type: string
-        description: Result bytes, if any.
+        description: 'Result bytes, if any.'
       raw_log:
         type: string
         description: |-
@@ -49946,7 +50625,7 @@ definitions:
             description: Response code.
           data:
             type: string
-            description: Result bytes, if any.
+            description: 'Result bytes, if any.'
           raw_log:
             type: string
             description: |-
@@ -50895,7 +51574,7 @@ definitions:
             description: Response code.
           data:
             type: string
-            description: Result bytes, if any.
+            description: 'Result bytes, if any.'
           raw_log:
             type: string
             description: |-
@@ -51214,7 +51893,7 @@ definitions:
               description: Response code.
             data:
               type: string
-              description: Result bytes, if any.
+              description: 'Result bytes, if any.'
             raw_log:
               type: string
               description: |-
@@ -53362,7 +54041,7 @@ definitions:
               format: byte
             index:
               type: boolean
-          description: EventAttribute is a single key-value pair, associated with an event.
+          description: 'EventAttribute is a single key-value pair, associated with an event.'
     description: >-
       Event allows application developers to attach additional information to
 
@@ -53381,7 +54060,7 @@ definitions:
         format: byte
       index:
         type: boolean
-    description: EventAttribute is a single key-value pair, associated with an event.
+    description: 'EventAttribute is a single key-value pair, associated with an event.'
   cosmos.upgrade.v1beta1.ModuleVersion:
     type: object
     properties:
@@ -54886,7 +55565,7 @@ definitions:
           grantee is the address of the user being granted an allowance of
           another user's funds.
       allowance:
-        description: allowance can be any of basic, periodic, allowed fee allowance.
+        description: 'allowance can be any of basic, periodic, allowed fee allowance.'
         type: object
         properties:
           type_url:
@@ -54966,7 +55645,7 @@ definitions:
               grantee is the address of the user being granted an allowance of
               another user's funds.
           allowance:
-            description: allowance can be any of basic, periodic, allowed fee allowance.
+            description: 'allowance can be any of basic, periodic, allowed fee allowance.'
             type: object
             properties:
               type_url:
@@ -55053,7 +55732,7 @@ definitions:
                 grantee is the address of the user being granted an allowance of
                 another user's funds.
             allowance:
-              description: allowance can be any of basic, periodic, allowed fee allowance.
+              description: 'allowance can be any of basic, periodic, allowed fee allowance.'
               type: object
               properties:
                 type_url:
@@ -55165,7 +55844,7 @@ definitions:
                 grantee is the address of the user being granted an allowance of
                 another user's funds.
             allowance:
-              description: allowance can be any of basic, periodic, allowed fee allowance.
+              description: 'allowance can be any of basic, periodic, allowed fee allowance.'
               type: object
               properties:
                 type_url:

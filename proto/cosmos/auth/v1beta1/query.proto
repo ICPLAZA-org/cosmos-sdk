@@ -16,57 +16,57 @@ service Query {
   //
   // Since: cosmos-sdk 0.43
   rpc Accounts(QueryAccountsRequest) returns (QueryAccountsResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/accounts";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/accounts";
   }
 
   // Account returns account details based on address.
   rpc Account(QueryAccountRequest) returns (QueryAccountResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/accounts/{address}";
   }
 
   // AccountAddressByID returns account address based on account number.
   //
   // Since: cosmos-sdk 0.46.2
   rpc AccountAddressByID(QueryAccountAddressByIDRequest) returns (QueryAccountAddressByIDResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/address_by_id/{id}";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/address_by_id/{id}";
   }
 
   // Params queries all parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/params";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/params";
   }
 
   // ModuleAccounts returns all the existing module accounts.
   //
   // Since: cosmos-sdk 0.46
   rpc ModuleAccounts(QueryModuleAccountsRequest) returns (QueryModuleAccountsResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/module_accounts";
   }
 
   // ModuleAccountByName returns the module account info by module name
   rpc ModuleAccountByName(QueryModuleAccountByNameRequest) returns (QueryModuleAccountByNameResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts/{name}";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/module_accounts/{name}";
   }
 
   // Bech32Prefix queries bech32Prefix
   //
   // Since: cosmos-sdk 0.46
   rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/bech32";
   }
 
   // AddressBytesToString converts Account Address bytes to string
   //
   // Since: cosmos-sdk 0.46
   rpc AddressBytesToString(AddressBytesToStringRequest) returns (AddressBytesToStringResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_bytes}";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/bech32/{address_bytes}";
   }
 
   // AddressStringToBytes converts Address string to bytes
   //
   // Since: cosmos-sdk 0.46
   rpc AddressStringToBytes(AddressStringToBytesRequest) returns (AddressStringToBytesResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_string}";
+    option (google.api.http).get = "/icplaza/auth/v1beta1/bech32/{address_string}";
   }
 }
 

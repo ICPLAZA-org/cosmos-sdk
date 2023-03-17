@@ -9,13 +9,13 @@
 #
 ## All protoc dependencies must be installed not in the module scope
 ## currently we must use grpc-gateway v1
-# cd ~
-# go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-# go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-# go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
-# go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest
-# go get github.com/regen-network/cosmos-proto@latest # doesn't work in install mode
-# go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@v0.3.1
+#cd ~
+#go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+#go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+#go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
+#go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest
+#go get github.com/regen-network/cosmos-proto@latest # doesn't work in install mode
+#go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@v0.3.1
 
 set -eo pipefail
 
@@ -36,7 +36,7 @@ cd ..
 (cd testutil/testdata; buf generate)
 
 # move proto files to the right places
-cp -r github.com/cosmos/cosmos-sdk/* ./
-rm -rf github.com
+#cp -r github.com/cosmos/cosmos-sdk/* ./
+#rm -rf github.com
 
 go mod tidy -compat=1.18

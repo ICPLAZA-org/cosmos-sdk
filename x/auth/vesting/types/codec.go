@@ -2,7 +2,6 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,13 +15,15 @@ import (
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.VestingAccount)(nil), nil)
+	cdc.RegisterConcrete(&MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount", nil)
+	cdc.RegisterConcrete(&MsgCreatePeriodicVestingAccount{}, "cosmos-sdk/MsgCreatePeriodicVestingAccount", nil)
+	cdc.RegisterConcrete(&MsgCreatePermanentVestingAccount{}, "cosmos-sdk/MsgCreatePermanentVestingAccount", nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
 	cdc.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount", nil)
 	cdc.RegisterConcrete(&PermanentLockedAccount{}, "cosmos-sdk/PermanentLockedAccount", nil)
-	legacy.RegisterAminoMsg(cdc, &MsgCreateVestingAccount{}, "cosmos-sdk/MsgCreateVestingAccount")
-	legacy.RegisterAminoMsg(cdc, &MsgCreatePermanentLockedAccount{}, "cosmos-sdk/MsgCreatePermLockedAccount")
+
 }
 
 // RegisterInterface associates protoName with AccountI and VestingAccount
@@ -58,7 +59,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateVestingAccount{},
-		&MsgCreatePermanentLockedAccount{},
+		&MsgCreatePeriodicVestingAccount{},
+		&MsgCreatePermanentVestingAccount{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

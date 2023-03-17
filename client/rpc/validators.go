@@ -3,6 +3,9 @@ package rpc
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/gorilla/mux"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -147,4 +150,58 @@ func GetValidators(ctx context.Context, clientCtx client.Context, height *int64,
 	}
 
 	return out, nil
+}
+
+// REST
+
+// Validator Set at a height REST handler
+func ValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 100)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse pagination parameters")
+			return
+		}
+
+		vars := mux.Vars(r)
+		height, err := strconv.ParseInt(vars["height"], 10, 64)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse block height")
+			return
+		}
+
+		chainHeight, err := GetChainHeight(clientCtx)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, "failed to parse chain height")
+			return
+		}
+		if height > chainHeight {
+			rest.WriteErrorResponse(w, http.StatusNotFound, "requested block height is bigger then the chain length")
+			return
+		}
+
+		output, err := GetValidators(r.Context(), clientCtx, &height, &page, &limit)
+		if rest.CheckInternalServerError(w, err) {
+			return
+		}
+		rest.PostProcessResponse(w, clientCtx, output)
+	}
+}
+
+// Latest Validator Set REST handler
+func LatestValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 100)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse pagination parameters")
+			return
+		}
+
+		output, err := GetValidators(r.Context(), clientCtx, nil, &page, &limit)
+		if rest.CheckInternalServerError(w, err) {
+			return
+		}
+
+		rest.PostProcessResponse(w, clientCtx, output)
+	}
 }

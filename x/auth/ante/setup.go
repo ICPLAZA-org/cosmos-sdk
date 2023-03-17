@@ -45,6 +45,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	// the AnteHandler, but if it panics the context won't be set properly in
 	// runTx's recover call.
 	defer func() {
+		fmt.Printf("height %d, gasWanted: %d, gasUsed: %d\n", ctx.BlockHeight(), gasTx.GetGas(), newCtx.GasMeter().GasConsumed())
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
 			case sdk.ErrorOutOfGas:
