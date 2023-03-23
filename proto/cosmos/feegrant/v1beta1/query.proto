@@ -14,12 +14,12 @@ service Query {
 
   // Allowance returns fee granted to the grantee by the granter.
   rpc Allowance(QueryAllowanceRequest) returns (QueryAllowanceResponse) {
-    option (google.api.http).get = "/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}";
+    option (google.api.http).get = "/icplaza/feegrant/v1beta1/allowance/{granter}/{grantee}";
   }
 
   // Allowances returns all the grants for address.
   rpc Allowances(QueryAllowancesRequest) returns (QueryAllowancesResponse) {
-    option (google.api.http).get = "/cosmos/feegrant/v1beta1/allowances/{grantee}";
+    option (google.api.http).get = "/icplaza/feegrant/v1beta1/allowances/{grantee}";
   }
 
   // AllowancesByGranter returns all the grants given by an address

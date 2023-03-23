@@ -1086,7 +1086,7 @@ var xxx_messageInfo_QueryDelegatorValidatorRequest proto.InternalMessageInfo
 // QueryDelegatorValidatorResponse response type for the
 // Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorResponse struct {
-	// validator defines the validator info.
+	// validator defines the the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 

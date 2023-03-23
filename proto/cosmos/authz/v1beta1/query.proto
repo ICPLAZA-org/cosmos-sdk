@@ -13,21 +13,21 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 service Query {
   // Returns list of `Authorization`, granted to the grantee by the granter.
   rpc Grants(QueryGrantsRequest) returns (QueryGrantsResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/grants";
+    option (google.api.http).get = "/icplaza/authz/v1beta1/grants";
   }
 
   // GranterGrants returns list of `GrantAuthorization`, granted by granter.
   //
   // Since: cosmos-sdk 0.46
   rpc GranterGrants(QueryGranterGrantsRequest) returns (QueryGranterGrantsResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/grants/granter/{granter}";
+    option (google.api.http).get = "/icplaza/authz/v1beta1/grants/granter/{granter}";
   }
 
   // GranteeGrants returns a list of `GrantAuthorization` by grantee.
   //
   // Since: cosmos-sdk 0.46
   rpc GranteeGrants(QueryGranteeGrantsRequest) returns (QueryGranteeGrantsResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/grants/grantee/{grantee}";
+    option (google.api.http).get = "/icplaza/authz/v1beta1/grants/grantee/{grantee}";
   }
 }
 

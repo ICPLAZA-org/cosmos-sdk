@@ -433,11 +433,11 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Allowance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "feegrant", "v1beta1", "allowance", "granter", "grantee"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Allowance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"icplaza", "feegrant", "v1beta1", "allowance", "granter", "grantee"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Allowances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "feegrant", "v1beta1", "allowances", "grantee"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Allowances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"icplaza", "feegrant", "v1beta1", "allowances", "grantee"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AllowancesByGranter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "feegrant", "v1beta1", "issued", "granter"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_AllowancesByGranter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "feegrant", "v1beta1", "issued", "granter"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
